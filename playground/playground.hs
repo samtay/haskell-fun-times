@@ -1,3 +1,29 @@
+{--
+Wow, I was trying to implement this "caller" and then continued tutorial and found $
+-- and I was damn close to standard implementation.... 
+caller :: a -> (a -> b -> c) -> (b -> c)
+caller x f = f x
+--}
+
+mapr' :: (a -> b) -> [a] -> [b]
+mapr' f xs = foldr (\x acc -> (f x):acc) [] xs
+
+
+elem' :: (Eq a) => a -> [a] -> Bool
+elem' y ys = foldl (\acc x -> if x == y then True else acc) False ys
+
+
+sum' :: (Num a) => [a] -> a
+-- sum' xs = foldl (+) 0 xs
+sum' = foldl (+) 0 -- make use of currying!
+-- foo a = bar b a   ===>   foo = bar b
+
+
+numChains :: Int
+numChains = length (filter (\xs -> length xs > 15) (map chain [1..100]))
+-- "anonymous funcs" called lambdas
+
+
 chain :: (Integral a) => a -> [a]
 chain n
   | n == 1    = [1]
