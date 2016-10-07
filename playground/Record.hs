@@ -2,6 +2,7 @@ module Records
 ( Person(..)
 , Car(..)
 , Vector(..)
+, scalarMult
 ) where
 
 data Person = Person { firstName :: String
@@ -9,7 +10,7 @@ data Person = Person { firstName :: String
                      , age :: Int
                      , height :: Float
                      , flavor :: String
-                     } deriving (Show)
+                     } deriving (Eq, Show, Read)
 
 data Car = Car {company :: String, model :: String, year :: Int} deriving (Show)
 
