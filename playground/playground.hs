@@ -1,3 +1,8 @@
+findKey :: (Eq k) => k -> [(k, v)] -> Maybe v
+-- findKey _ [] = Nothing
+findKey key = foldr (\(k, v) acc -> if (k == key) then Just v else acc) Nothing
+
+
 {--
 Wow, I was trying to implement this "caller" and then continued tutorial and found $
 -- and I was damn close to standard implementation.... 
