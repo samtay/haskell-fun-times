@@ -4,13 +4,19 @@ module Records
 , Vector(..)
 , scalarMult
 ) where
+import qualified Data.Set as Set
 
 data Person = Person { firstName :: String
                      , lastName :: String
                      , age :: Int
                      , height :: Float
                      , flavor :: String
-                     } deriving (Eq, Show, Read)
+                     } deriving (Eq, Show, Read, Ord)
+
+type People = [Person]
+
+uniq' :: People -> People
+uniq' = Set.toList . Set.fromList 
 
 data Car = Car {company :: String, model :: String, year :: Int} deriving (Show)
 
