@@ -1,3 +1,9 @@
+module BinaryTree
+( Tree(..)
+, singleton
+, treeInsert
+, treeElem ) where
+
 data Tree a = EmptyTree | Node a (Tree a) (Tree a) deriving (Show, Read, Eq)
 
 singleton :: a -> Tree a
