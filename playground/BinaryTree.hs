@@ -27,3 +27,7 @@ treeElem x EmptyTree = False
 treeElem x (Node y a b)
   | x == y    = True
   | otherwise = treeElem x (if x < y then a else b)
+
+instance Functor Tree where
+  fmap f EmptyTree = EmptyTree
+  fmap f (Node x a b) = Node (f x) (fmap f a) (fmap f b)
