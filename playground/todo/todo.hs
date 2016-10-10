@@ -7,14 +7,16 @@ type Command = [String] -> IO ()
 
 main = do
   (command:args) <- getArgs
-  let (Just action) = lookup command dispatch
+  let action = case lookup command dispatch of
+                (Nothing)  -> defaultErr
+                (Just (x)) -> x
   action args
-
 
 dispatch :: [(String, Command)]
 dispatch = [("add", add)
            ,("view", view)
            ,("remove", remove)
+           ,("default", defaultErr)
            ]
 
 add :: Command
@@ -36,3 +38,6 @@ remove [filename, x] = do
   hClose tempHandle
   removeFile filename
   renameFile tempName filename
+
+defaultErr :: Command
+defaultErr _ = putStrLn "Command not found"
