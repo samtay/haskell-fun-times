@@ -23,4 +23,7 @@ try = do (fileName:_) <- getArgs
          putStrLn $ "The file has " ++ show (length (lines contents)) ++ " lines!"
 
 handler :: IOError -> IO ()
-handler _ = putStrLn "<[ insert unuseful error message ]>"
+handler e
+  | isDoesNotExistError e = putStrLn "The file doesn't exist"
+  | isPermissionError e = putStrLn "The file lacks read permissions"
+  | otherwise = ioError e
