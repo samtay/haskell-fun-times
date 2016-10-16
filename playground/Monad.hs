@@ -1,0 +1,79 @@
+{--
+
+Monads
+
+- A natural extension of applicative functors. If we have a value with context `m a`
+and a function `(a -> m b)` that takes a "normal" value `a` but returns a value
+with context `m b`, how do we feed the context value `m a` into the function?
+
+class Monad m where
+  return :: a -> m a
+  (>>=) :: m a -> (a -> m b) -> m b
+  (>>) :: m a -> m b -> m b
+  x >> y = x >>= \_ -> y
+  fail :: String -> m a
+  fail msg = error msg
+
+--}
+
+-- Conceptualize bind (>>=)
+applyMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
+applyMaybe Nothing f  = Nothing
+applyMaybe (Just x) f = f x
+
+{--
+
+instance Monad Maybe where
+  return x = Just x
+  Nothing >>= f = Nothing
+  Just x >>= f = fx
+  fail _ = Nothing
+--}
+
+-- Pierre falls if the sides of the pole differ by > 3 birds
+type Birds = Int
+type Pole = (Birds, Birds)
+
+landLeft :: Birds -> Pole -> Maybe Pole
+landLeft n (l, r)
+  | abs ((l + n) - r) < 4 = Just (l + n, r)
+  | otherwise             = Nothing
+
+landRight :: Birds -> Pole -> Maybe Pole
+landRight n (l, r)
+  | abs (l - (r + n)) < 4 = Just (l, r + n)
+  | otherwise             = Nothing
+
+(-:) :: a -> (a -> b) -> b
+x -: f = f x
+
+-- (0,0) -: landRight 3 -: (>>= landLeft 1) -: (>>= landLeft 5) -- OR
+-- return (0,0) >>= landRight 3 >>= landLeft 1 >>= landLeft 5
+-- Just (6,3)
+
+-- return (0,0) >>= landRight 3 >>= landLeft 1 >>= landLeft 5 >>= landLeft 1
+-- Nothing
+
+{-- do notation
+
+do is for all monads, not just IO!
+
+-- return (0,0) >>= landRight 3 >>= landLeft 1 >>= landLeft 5 -- OR
+--}
+
+routine :: Maybe Pole
+routine = do
+  start <- return (0,0)
+  first <- landRight 3 start
+  second <- landLeft 1 first
+  landLeft 5 second
+
+justH :: Maybe Char
+justH = do
+  (x:xs) <- Just "hello"
+  return x
+
+wopwop :: Maybe Char
+wopwop = do
+  (x:xs) <- Just "" -- failed pattern matching calls monad :: fail
+  return 'x'        -- Maybe implements fail _ = Nothing
