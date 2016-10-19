@@ -14,6 +14,16 @@ class Monad m where
   fail :: String -> m a
   fail msg = error msg
 
+Laws:
+1. return x >>= f   = fx
+2. m >>= return     = m
+3. (m >>= f) >>= g  = m >>= (\x -> fx >>= g)
+
+Equivalent Laws:
+1. f <=< return    = f
+2. return <=< f    = f
+3. f <=< (g <=< h) = (f <=< g) <=< h
+
 --}
 
 -- Conceptualize bind (>>=)
