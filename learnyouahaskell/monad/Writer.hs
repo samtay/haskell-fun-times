@@ -95,4 +95,30 @@ gcdReverse a b
         tell [show a ++ " mod " ++ show b ++ " = " ++ show (a `mod` b)]
         return result
 
+-- Difference lists can support more efficient appending
+-- Differene list is a function that takes a list and prepands another list
+-- [1,2,3] ===> \xs -> [1,2,3] ++ xs
+-- []      ===> \xs -> [] ++ xs
+-- f `append` g = \xs -> f (g xs)
 
+newtype DiffList a = DiffList { getDiffList :: [a] -> [a] }
+
+toDiffList :: [a] -> DiffList a
+toDiffList xs = DiffList (xs++)
+
+fromDiffList :: DiffList a -> [a]
+fromDiffList (DiffList f) = f []
+
+instance Monoid (DiffList a) where
+    mempty = DiffList ([]++)
+    (DiffList f) `mappend` (DiffList g) = DiffList (f . g)
+
+gcdReverseImproved :: Int -> Int -> Writer (DiffList String) Int
+gcdReverseImproved a b
+    | b == 0 = do
+        tell (toDiffList ["Finished with " ++ show a])
+        return a
+    | otherwise = do
+        result <- gcdReverseImproved b (a `mod` b)
+        tell (toDiffList [show a ++ " mod " ++ show b ++ " = " ++ show (a `mod` b)])
+        return result
