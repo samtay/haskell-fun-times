@@ -1,4 +1,4 @@
-module Stack where
+module CustomState where
 import Control.Applicative
 import Control.Monad (liftM, ap)
 -- While functions' inability to change global state/variables leads to better programs,
