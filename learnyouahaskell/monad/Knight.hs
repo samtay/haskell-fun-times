@@ -1,3 +1,4 @@
+module Knight where
 import Control.Monad
 
 type KnightPos = (Int,Int)
