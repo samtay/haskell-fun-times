@@ -1,3 +1,45 @@
+# 3.2 Instances
+This section is a showcase of some common functor instances, nothing new after going
+through *Learn You a Haskell*. I am including the "proof" exercises 4 and 5 because they
+are better suited to markdown.
+
+#### 4. Give an example of a type of kind * -> * which cannot be made an instance of Functor (without using undefined).
+```haskell
+data Jumble a = Jumble (a -> String)
+```
+Jumble cannot be made an instance of Functor because `fmap :: (a -> b) -> f a -> f b`,
+and in this case, notice that `f a === Jumble (a -> String)`. So what would we do with
+the inital argument that is a function of type `(a -> b)`? We need to end up with a type
+of `Jumble (b -> String)`, in other words a function that accepts type `b`. There's no
+way for us to do this because we aren't guaranteed an inverse of any of these functions.
+Note this is like the opposite of `((->) b)`, where the type parameter on which Functor
+operates is the *second* parameter.
+
+Yeah I know, I'm not satisfied with that explanation either. I found other people who go
+into more detail ([[1](http://stackoverflow.com/questions/26985562/make-data-type-of-kind-thats-not-a-functor/26986211#26986211)] [[2](https://michaelochurch.wordpress.com/2016/01/01/insights-into-why-a-contravariant-type-cant-be-a-haskell-functor/)]). At least I had the right idea with a function of type `a -> b`.
+
+
+#### 5. Is this statement true or false: The composition of two Functors is also a Functor
+I believe this is true.
+
+**Proof**: Consider types `A` and `B` which are each of kind `* -> *`. Without loss of generality,
+let us consider the composed type `C = B A`, which is also of kind `* -> *`. Since `A` and `B`
+are each Functors, we know that for any `x`,`y` of indeterminate type,
+```haskell
+fmap f (B x) = B (f x)
+fmap f (A y) = A (f y)
+```
+Therefore we can define `fmap` for type `C` as
+```haskell
+fmap f (C z) =
+fmap f (B (A z)) = let (A y) = fmap f (A z)
+                   in (A y) <$ (B z) -- does second parameter matter?
+``` 
+Notice we only need to `fmap f` once, to transform `(a -> b)`. The second usage of the Functor class
+is just `<$` which is `fmap . const`, and is just used to take the already fmapped value (in context of `A`)
+and minimally put it into the context of `B`.
+Note: This proof sucks.
+
 # 3.3 Laws
 
 While not guaranteed by Haskell itself, functors should satisfy these laws:
