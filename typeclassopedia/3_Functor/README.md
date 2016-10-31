@@ -110,7 +110,7 @@ instance Functor [] where
 Both laws. Observe.
 ```haskell
 -- Law 1 counterexample
-fmap id [1] = fmap [1, 1] -- /= [1]
+fmap id [1] = [1, 1] -- /= [1]
 
 -- Law 2 counterexample
 fmap ((*2) . (*2)) [1] = [1*2*2, 1*2*2] = [4,4]

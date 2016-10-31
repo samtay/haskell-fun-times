@@ -24,7 +24,7 @@ instance Functor [] where
   fmap _ [] = []
   fmap g (x:xs) = g x : g x : fmap g xs
 -- Both laws. Observe.
--- fmap id [1] = fmap [1, 1] /= [1]
+-- fmap id [1] = [1, 1] /= [1]
 -- fmap ((*2) . (*2)) [1] = [1*2*2, 1*2*2] = [4,4]
 -- But when fmap happens twice, the list increases size twice:
 -- fmap (*2) . fmap (*2) $ [1] = fmap (*2) $ [1*2, 1*2]
