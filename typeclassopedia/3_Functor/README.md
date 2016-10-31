@@ -40,6 +40,7 @@ is just `<$` which is `fmap . const`, and is just used to take the already fmapp
 and minimally put it into the context of `B`.
 Note: This proof sucks.
 
+
 # 3.3 Laws
 
 While not guaranteed by Haskell itself, functors should satisfy these laws:
@@ -121,3 +122,16 @@ fmap (*2) . fmap (*2) $ [1] = fmap (*2) $ [1*2, 1*2]
 Of course, by Theorem **3.3.2** we could just provide a counterexample for Law 2,
 and thus by contrapositive know that Law 1 is not satisfied. But, might as well
 be thorough.
+
+
+# 3.4 Intuition
+Most explanations of `fmap` talk about applying a function to a value within a context,
+without modifying that context. We can also take a more functional view: recall that `fmap`,
+just like any other Haskell function, is curried. So when we consider its type
+`(a -> b) -> f a -> f b` we can also think of this as `(a -> b) -> (f a -> f b)` and
+think about what happens when we just apply the first parameter, which is a function of
+type `a -> b`. In this way, we can think of `fmap` as transforming a "normal" function `g :: a -> b`
+to one that operates over contexts `fmap g :: f a -> f b`.
+
+This transformation is known as *lift*. We say that `fmap` *lifts* a function from the "normal world"
+to the "`f` world"
