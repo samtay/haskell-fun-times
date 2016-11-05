@@ -15,17 +15,19 @@ I am already familiar with the lambda calculus and its method of computation. On
 exercises.
 
 1. *λxy.xz*
-  [ ] *λxz.xz*
-  [x] *λmn.mz*
-  [ ] *λz(λx.xz)*
+ - [ ] *λxz.xz*
+ - [x] *λmn.mz*
+ - [ ] *λz(λx.xz)*
+
 2. *λxy.xxy*
-  [ ] *λmn.mnp*
-  [ ] *λx(λy.xy)*
-  [x] *λa(λb.aab)*
+ - [ ] *λmn.mnp*
+ - [ ] *λx(λy.xy)*
+ - [x] *λa(λb.aab)*
+
 3. *λxyz.zx*
-  [ ] *λx.(λy.(λz.z))*
-  [x] *λtos.st*
-  [ ] *λmnp.mn*
+ - [ ] *λx.(λy.(λz.z))*
+ - [x] *λtos.st*
+ - [ ] *λmnp.mn*
 
 ### Evaluation is Simplification
 
@@ -69,6 +71,5 @@ Sometimes reducible lambda terms cannot reduce to beta normal form. Instead of c
 6. *(λa.aa)(λb.ba)c = (λb.ba)(λb.ba)c = (λb.ba)ac = aac*
 7. *(λxyz.xz(yz))(λx.z)(λx.a) = (λxyz.xz(yz))(λ_.z)(λ_.a) = λz.(λ_.z)z((λ_.a)z)*
    *= λz.za*
-Note the last one there is not fully applied
 
 Damn! I screwed up alpha equivalence. The correct answer to (7) is *λz1.za*, which means the *z* in the body is a free variable. Of course, this would have been clear if I had renamed the initial *xyz* arguments to *jki*. Good exercises.
