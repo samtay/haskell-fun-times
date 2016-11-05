@@ -2,7 +2,8 @@
 Just a repo of me learning and playing with haskell
 
 ### resources
-- Learn You A Haskell For Great Good! ([book](http://learnyouahaskell.com/) and [notes](./learnyouahaskell))
+- Haskell Programming from First Principles ([book](http://haskellbook.com/) and [notes](./from-first-principles))
+- Learn You A Haskell For Great Good! ([book](http://learnyouahaskell.com/) and [notes](./learn-you-a-haskell))
 - Typeclassopedia ([book](https://wiki.haskell.org/Typeclassopedia) and [notes](./typeclassopedia))
 
 ### future
