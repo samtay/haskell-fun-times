@@ -47,7 +47,7 @@ Sometimes reducible lambda terms cannot reduce to beta normal form. Instead of c
 
 ## Exercises
 
-#### Determine if each of the following are combinators
+##### Determine if each of the following are combinators
 
 1. Yes - *λx.xxx*
 2. No - *λxy.zx*
@@ -55,13 +55,13 @@ Sometimes reducible lambda terms cannot reduce to beta normal form. Instead of c
 4. Yes - *λxyz.xy(zxy)*
 5. No - *λxy.xy(zxy)*
 
-#### Determine if each of the following can be reduced to a normal form or if they diverge.
+##### Determine if each of the following can be reduced to a normal form or if they diverge.
 
 1. Converge - *λx.xxx*
 2. Diverge - *(λz.zz)(λy.yy)*
 3. Converge - *(λx.xxx)z*
 
-#### Evaluate (that is, beta reduce) each of the following expressions to normal form.
+##### Evaluate (that is, beta reduce) each of the following expressions to normal form.
 
 1. *(λabc.cba)zz(λwv.w) = (λwv.w)zz = z*
 2. *(λx.λy.xyy)(λa.a)b = (λa.a)bb = bb*
