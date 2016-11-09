@@ -25,6 +25,7 @@ Just a repo of me learning and playing with haskell
 - Practical example of [building a package](https://howistart.org/posts/haskell/1) with tests and all by Chris Allen
 - Yesod [reference #1](http://mdjnewman.me/2016/01/haskell-stack-yesod-docker/)
 - Yesod [reference #2](http://yannesposito.com/Scratch/en/blog/Yesod-excellent-ideas/)
+- Using [exceptions](https://www.fpcomplete.com/blog/2016/11/exceptions-best-practices-haskell) properly
 
 #### misc
 - Great [brain dump](http://dev.stephendiehl.com/hask/) by Stephen Diehl
