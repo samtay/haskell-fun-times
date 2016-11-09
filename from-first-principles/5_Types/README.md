@@ -47,3 +47,15 @@ That `a` is literally the same value, as the type signature shows us that nothin
  1. `_ :: Ord a => a -> a -> Bool`
 
 **i -> iii | ii -> iv | iii -> ii | iv -> i | v -> v**
+
+### 5.4 Currying
+
+Just like the lambda calculus, all Haskell functions are curried, meaning there are no functions that accept multiple arguments. There are just nested functions that intermediately return a function accepting a single parameter.
+
+The way the type constructor `(->)` is defined makes currying the default. It is infix and right associative -- so
+```haskell
+f :: a -> a -> a
+-- associates to
+f :: a -> (a -> a)
+```
+which demonstrates currying very clearly. When we pass a single value to this function of type `a`, we get back a function of type `(a -> a)`.
