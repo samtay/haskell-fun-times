@@ -49,3 +49,60 @@ instance (Eq a, Eq b) => Eq (EitherOr a b) where
   Goodbye x == Goodbye y = x == y
   _ == _ = False
 ```
+
+### 6.14 Chapter Exercises
+
+#### Does it typecheck?
+```haskell
+data Person = Person Bool
+printPerson :: Person -> IO ()
+printPerson person = putStrLn (show person)
+```
+**No**, `Person` has no instance of the `Show` typeclass.
+
+```haskell
+data Mood = Blah | Woot deriving Show
+settleDown x = if x == Woot
+                 then Blah
+                 else x
+```
+**No**, `Mood` has no instance of the `Eq` typeclass.
+
+```haskell
+type Subject = String
+type Verb = String
+type Object = String
+data Sentence =
+Sentence Subject Verb Object
+deriving (Eq, Show)
+s1 = Sentence "dogs" "drool"
+s2 = Sentence "Julie" "loves" "dogs"
+```
+**Yes**, nothing wrong with this, but `s1` is a partially applied data constructor of type `Object -> Sentence`.
+
+#### Typechecking datatypes
+Given
+```haskell
+data Rocks = Rocks String deriving (Eq, Show)
+
+data Yeah = Yeah Bool deriving (Eq, Show)
+
+data Papu = Papu Rocks Yeah deriving (Eq, Show)
+```
+which of the following typechecks?
+
+```haskell
+phew = Papu "chases" True
+-- No, this is missing data construtors for Rocks and Yeah
+
+truth = Papu (Rocks "chomskydoz") (Yeah True)
+-- Yes this is fine
+
+equalityForall :: Papu -> Papu -> Bool
+equalityForall p p' = p == p'
+-- This is fine but unnecessary since it is equivalent to ==
+
+comparePapus :: Papu -> Papu -> Bool
+comparePapus p p' = p > p'
+-- No, there is no instance of the Ord typeclass
+```
