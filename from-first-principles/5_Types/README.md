@@ -103,26 +103,29 @@ will result in `add10` and `sub10` both of types `Num a => a -> a -> a -> a`. Bu
 Given a function and its type, tell us what type results from applying some or all of the arguments.
 
 1. If the type of `f` is `a -> a -> a -> a`, and the type of `x` is `Char` then the type of `f x` is
- [x] `Char -> Char -> Char`
- [ ] `x -> x -> x -> x`
- [ ] `a -> a -> a`
- [ ] `a -> a -> a -> Char`
+ - [x] `Char -> Char -> Char`
+ - [ ] `x -> x -> x -> x`
+ - [ ] `a -> a -> a`
+ - [ ] `a -> a -> a -> Char`
+ 
 2. If the type of `g` is `a -> b -> c -> b`, then the type of `g 0 'c' "woot"` is
- [ ] `String`
- [ ] `Char -> String`
- [ ] `Int`
- [x] `Char`
-3. If the type of `h` is `(Num a, Num b) => a -> b -> b`, then the type of `h 1.0 2` is:
- [ ] `Double`
- [ ] `Integer`
- [ ] `Integral b => b`
- [x] `Num b => b`
+ - [ ] `String`
+ - [ ] `Char -> String`
+ - [ ] `Int`
+ - [x] `Char`
+
+3. If the type of `h` is `(Num a, Num b) => a -> b -> b`, then the type of `h 1.0 2` is
+ - [ ] `Double`
+ - [ ] `Integer`
+ - [ ] `Integral b => b`
+ - [x] `Num b => b`
+
 9. If the type of `kessel` is `(Ord a, Num b) => a -> b -> a`, then the type of `kessel (1 :: Integer) 2` is
- [ ] `Num a => a`
- [ ] `Ord a => a`
- [x] `Integer`
- [ ] `(Num a, Ord a) => a`
- [ ] `a`
+ - [ ] `Num a => a`
+ - [ ] `Ord a => a`
+ - [x] `Integer`
+ - [ ] `(Num a, Ord a) => a`
+ - [ ] `a`
 
 ### 5.5 Polymorphism
 

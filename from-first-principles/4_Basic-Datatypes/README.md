@@ -126,7 +126,8 @@ f x y = ((snd x, snd y), (fst x, fst y))
 Polymorphism in Haskell is either parametric or constrained.
 The identity function, `id`, is an example of a parametrically polymorphic function:
 ```haskell
-id :: a -> a id x = x
+id :: a -> a
+id x = x
 ```
 Here `id` works for a value of any type because it doesn’t use any information specific to a given type or set of types.
 Whereas,
