@@ -158,3 +158,52 @@ Yes
   WHNF
 
 I say neither for the above cases because they have functions (that are not data constructors) with arguments applied yet not evaluated.
+
+### 9.9 Transforming lists of values
+#### Exercises: More Bottoms
+##### 1. What is the result of `take 1 $ map (+1) [undefined, 2, 3]`?
+Blows up
+##### 2. What is the result of `take 1 $ map (+1) [1, undefined, 3]`?
+returns [2]
+##### 4. What does this do? What is the type? `itIsMystery xs = map (\x -> elem x "aeiou") xs`
+This takes a string and returns an array with a `Bool` value for each character depending on whether it is a vowel or not. The type is `itIsMystery :: [Char] -> [Bool]`.
+
+### 9.10 Filtering lists of values
+##### 1. Given the above, how might we write a filter function that would give us all the multiples of 3 out of a list from 1-30?
+```haskell
+filter ((==0) . (`mod`3)) [1..30] -- nice
+```
+
+##### 2. Recalling what we learned about function composition, how could we compose the above function with the length function to tell us *how many* multiples of 3 there are between 1 and 30?
+```haskell
+length $ filter ((==0) . (`mod`3)) [1..30] -- or
+(length . filter ((==0) . (`mod`3))) [1..30]
+```
+
+##### 3. Make a function that removes all articles (’the’, ’a’, and ’an’) from sentences.
+```haskell
+filterArticles :: String -> [String]
+filterArticles = filter (\w -> w /= "an" && w /= "a" && w /= "the") . words
+```
+
+### 9.11 Zipping lists
+#### Zipping exercises
+```haskell
+-- 1. Write your own version of zip :: [a] -> [b] -> [(a, b)] and
+--    ensure it behaves the same as the original.
+zip' :: [a] -> [b] -> [(a, b)]
+zip' _ []          = []
+zip' [] _          = []
+zip' (x:xs) (y:ys) = (x,y):(zip' xs ys)
+
+-- 2. Do what you did for zip, but now for zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' _ _ []          = []
+zipWith' _ [] _          = []
+zipWith' f (x:xs) (y:ys) = (f x y):(zipWith' f xs ys)
+
+-- 3. Rewrite your zip in terms of the zipWith you wrote.
+
+zip'' :: [a] -> [b] -> [(a, b)]
+zip'' = zipWith' (,)
+```
