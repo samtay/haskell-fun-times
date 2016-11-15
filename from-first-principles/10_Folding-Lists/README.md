@@ -98,13 +98,15 @@ It is important that the left fold has the accumulated steps of the fold as its 
 foldr f acc (x:xs) = f x (foldr f acc xs)
 foldl f acc (x:xs) = foldl f (f acc x) xs
 ```
-This means that no matter what the folding function is, **`foldl` always recurses the entire spine**, unlike the laziness we saw at play with `foldr const`. This means that all cons cells must be well defined. However, values in the cons cells can still be undefined depending on the folding function:
+In other words, `foldl` is **tail recursive**. No matter what the folding function is, **`foldl` always recurses the entire spine**, unlike the laziness we saw at play with `foldr const`. This means that all cons cells must be well defined. However, values in the cons cells can still be undefined depending on the folding function:
 ```haskell
 λ> foldl (\_ _ -> 5) 0 ([1..5] ++ undefined)
 *** Exception: Prelude.undefined
 λ> foldl (\_ _ -> 5) 0 ([1..5] ++ [undefined])
 5
 ```
+
+In general, don't use `foldl`. If it is needed, it is probably better to replace with `foldl'` which is explicitly strict -- explanation forthcoming in efficiency chapter.
 
 ### Exercises
 ##### 2. What does the following mystery function do?
