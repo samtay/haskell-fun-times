@@ -126,3 +126,61 @@ data Person = Person { name :: String
 λ> name (Person "Papu" 5)
 "Papu"
 ```
+
+### 11.12 Normal form
+Another aspect of algebra that applies to datatypes in Haskell is the *distributive* property. We say that a type declaration is in *normal form* if the product is distributed over sums.
+```haskell
+-- not normal form
+data SumType = Option1 | Option2 | Option3
+data ProductType = ProductType String SumType
+
+-- normal form, product has been distributed over sum
+data ProductType = Option1 String | Option2 String | Option3 String
+```
+
+#### Exercise: How Does Your Garden Grow?
+What is the normal form of `Garden` where
+```haskell
+data FlowerType = Gardenia | Daisy | Rose | Lilac deriving Show
+type Gardener = String
+data Garden = Garden Gardener FlowerType deriving Show
+```
+This is just like my custom example above. Normal form is:
+```haskell
+type Gardener = String
+data Garden = Gardenia Gardener | Daisy Gardener | Rose Gardener | Lilac Gardener
+  deriving Show
+```
+
+### 11.13 Constructing and deconstructing values
+#### Accidental bottoms from records
+Do **not** progagate bottoms through record types:
+```haskell
+data Automobile = Null
+                | Car { make :: String
+                , model :: String
+                , year :: Integer }
+deriving (Eq, Show)
+
+λ> make Null
+-- *** Exception: No match in record selector make
+```
+**Instead** whenever we have a product that uses record accessors, keep it separate of any sum type that is wrapping it:
+```haskell
+-- Split out the record/product
+data Car = Car { make :: String
+               , model :: String
+               , year :: Integer }
+               deriving (Eq, Show)
+-- The Null is still not great, but
+-- we're leaving it in to make a point
+data Automobile = Null
+                | Automobile Car
+                deriving (Eq, Show)
+λ> make Null
+-- Type system error, at compile time
+```
+Yay for intiution! This is what I ended up deciding to do with the octohook payload types.
+
+### 11.14 Function type is exponential
+Given a function `a -> b`, the number of implementations is `|b|`<sup>`|a|`</sup>.
