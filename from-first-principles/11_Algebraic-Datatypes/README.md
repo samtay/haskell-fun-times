@@ -184,3 +184,37 @@ Yay for intiution! This is what I ended up deciding to do with the octohook payl
 
 ### 11.14 Function type is exponential
 Given a function `a -> b`, the number of implementations is `|b|`<sup>`|a|`</sup>.
+
+### 11.15 Higher-kinded datatypes
+Getting comfortable with writing these is the next step in the evolution of a Haskell programmer. For example, in the `bloodhound` package for Elasticsearch:
+```haskell
+data EsResultFound a =
+  EsResultFound { _version :: DocVersion
+                , _source :: a
+  } deriving (Eq, Show)
+```
+
+### 11.16 Lists are polymorphic
+As we've seen, nonalphanumeric operators are infix by default. Furthermore
+- any operator starting with `:` must be an infix type or data constructor
+- all infix data constructors **must** start with a colon
+- the type constructor for functions `->` is the only infix type constructor that doesn't start with a colon
+- of course, `::` is reserved for type assertions
+
+This appears to allow us shortcuts:
+```haskell
+data Product a b =
+  a :&: b
+  deriving (Eq, Show)
+
+Prelude> :t 1 :&: 2
+1 :&: 2 :: (Num a, Num b) => Product a b
+```
+
+### 11.17 Binary Tree
+```haskell
+data BinaryTree a =
+    Leaf
+  | Node (BinaryTree a) a (BinaryTree a)
+  deriving (Eq, Ord, Show)
+```
