@@ -16,6 +16,7 @@ Just a repo of me learning and playing with haskell
 - [Real World Haskell](http://book.realworldhaskell.org/read/) is outdated, but probably still worth
 - [Simple IO to Monad Transformers](https://www.amazon.com/Simple-IO-Monad-Transformers-ebook/dp/B00KN6XZ1M)
 
+
 #### articles
 - 24 days of [GHC extensions](https://ocharles.org.uk/blog/pages/2014-12-01-24-days-of-ghc-extensions.html)
 - 24 days of [hackage (2012)](https://ocharles.org.uk/blog/pages/2012-12-01-24-days-of-hackage.html)
@@ -30,3 +31,4 @@ Just a repo of me learning and playing with haskell
 #### misc
 - Great [brain dump](http://dev.stephendiehl.com/hask/) by Stephen Diehl
 - [Best practices guide](https://github.com/frontrowed/guides) by Front Row Ed
+- Mostly adequate guide to [fp](https://www.gitbook.com/book/drboolean/mostly-adequate-guide/details) (this is Javascript, but has chapters on general concepts like category theory)
