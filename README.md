@@ -1,5 +1,6 @@
 # haskell-fun-times
 Just a repo of me learning and playing with haskell
+**TODO** Use shake/hakyll/pandoc to compile this into a github.io site.
 
 ## resources
 - Haskell Programming from First Principles ([book](http://haskellbook.com/) and [notes](./from-first-principles))
