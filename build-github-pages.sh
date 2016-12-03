@@ -18,7 +18,8 @@ __build() {
     fi
   done
 
-  pandoc -s -o "$topdir.html" "$mdFiles"
+  # for some reason this doesn't work: pandoc -s -o "$topdir.html" "$mdFiles"
+  echo "$mdFiles" | pandoc -s -o "$topdir.html"
 }
 
 # compiles haskell files
@@ -34,22 +35,36 @@ __compileHs() {
   done
 }
 
-__build_ffp() {
-  __build "from-first-principles"
+# cleanup *.hs.md files
+__cleanup() {
+  for f in $(find -type f -name "*.hs.md"); do
+    rm $f
+  done
 }
 
 main() {
   local topdirs="from-first-principles learn-you-a-haskell cis-194 typeclassopedia"
+
+  # sync with master
   git checkout gh-pages
   git reset --hard master
+
+  # build HTML content
   for topdir in "$topdirs"; do
     __build $topdir
     sed -i -e "s/.\/$topdir/$topdir.html/g" README.md
   done
   pandoc -s -o "index.html" README.md
-  git add "index.html $topdirs"
+
+  # send off to github
+  for f in "index $topdirs"; do
+    git add "$f.html"
+  done
   git commit -m 'Compiled haskell content into somewhat readable html'
-  git push
+  git push -f
+
+  __cleanup
+  git checkout master
 }
 
 main "$@"
