@@ -35,11 +35,12 @@ __compileHs() {
   done
 }
 
-# cleanup *.hs.md files
+# cleanup *.hs.md files, git stuff
 __cleanup() {
   for f in $(find -type f -name "*.hs.md"); do
     rm $f
   done
+  git checkout README.md
 }
 
 main() {
