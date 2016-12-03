@@ -6,6 +6,7 @@ Just a repo of me learning and playing with haskell
 - Haskell Programming from First Principles ([book](http://haskellbook.com/) and [notes](./from-first-principles))
 - Learn You A Haskell For Great Good! ([book](http://learnyouahaskell.com/) and [notes](./learn-you-a-haskell))
 - Typeclassopedia ([book](https://wiki.haskell.org/Typeclassopedia) and [notes](./typeclassopedia))
+- CIS 194 ([online course](http://cis.upenn.edu/~cis194/spring13/lectures.html) and [notes](./cis-194))
 
 ## future
 
