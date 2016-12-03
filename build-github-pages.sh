@@ -8,18 +8,20 @@ __build() {
   __compileHs $topdir
 
   ## aggregate all .md files
-  local mdFiles=""
+  local content=""
+  local sep=$'\n\n'
   for mdFile in $(find -type f -name "*.md" -path "./$topdir*" | sort); do
     # poor mans sorting
     if [[ "$mdFile" == "./$topdir/$(basename $mdFile)" ]]; then
-      mdFiles="$mdFile $mdFiles"
+      content="$(cat $mdFile)$sep$content"
     else
-      mdFiles="$mdFiles $mdFile"
+      content="$content$sep$(cat $mdFile)"
     fi
   done
 
   # for some reason this doesn't work: pandoc -s -o "$topdir.html" "$mdFiles"
-  echo "$mdFiles" | pandoc -s -o "$topdir.html"
+  rm "$topdir.html"
+  echo "$content" | pandoc --read=markdown_github --standalone --output "$topdir.html"
 }
 
 # compiles haskell files
