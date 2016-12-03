@@ -95,3 +95,5 @@ prop_additionGreater x = x + 1 > x
 runQc :: IO ()
 runQc = quickCheck prop_additionGreater
 ```
+
+See the [Babby.hs](./Babby.hs) file for more extensive examples of QuickCheck features, such as Gen, Arbitrary, CoArbitrary.
