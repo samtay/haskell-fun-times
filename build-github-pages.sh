@@ -43,21 +43,21 @@ __cleanup() {
 }
 
 main() {
-  local topdirs="from-first-principles learn-you-a-haskell cis-194 typeclassopedia"
+  local -a topdirs=(from-first-principles learn-you-a-haskell cis-194 typeclassopedia)
 
   # sync with master
   git checkout gh-pages
   git reset --hard master
 
   # build HTML content
-  for topdir in "$topdirs"; do
+  for topdir in ${topdirs[@]}; do
     __build $topdir
     sed -i -e "s/.\/$topdir/$topdir.html/g" README.md
   done
   pandoc -s -o "index.html" README.md
 
   # send off to github
-  for f in "index $topdirs"; do
+  for f in ${topdirs[@]} + "index"; do
     git add "$f.html"
   done
   git commit -m 'Compiled haskell content into somewhat readable html'
