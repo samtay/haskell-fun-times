@@ -38,6 +38,7 @@ newtype Server = Server String
 from a *developer* perspective is that `newtype` **constrains** the datatype to a single unary data constructor. Furthermore, `newtype` guarantees no additional runtime overhead from wrapping the original type, since the runtime representation is identical to the original type.
 
 In summary, some uses cases are:
+
 1. Signaling intent that you are simply wrapping a type, and that the type will not eventually grow into a more complicated sum or product type.
 2. Improve type safety by avoiding mixing up many values of the same representation.
 3. Add different typeclass instances to a type that is otherwise unchanged representationally.
@@ -63,11 +64,11 @@ Similar to numbers having more than one possible `Monoid` instance, so does `Boo
 #### Maybe
 `Maybe` actually has three possible monoid interpretations. `Nothing` is the obvious choice for `mempty` in all situations:
 ```haskell
-First prioritizes the leftmost non-Nothing value
+-- First prioritizes the leftmost non-Nothing value
 Prelude> First (Just 1) `mappend` First (Just 2)
 First {getFirst = Just 1}
 
-Second prioritizes the rightmost non-Nothing value
+--Second prioritizes the rightmost non-Nothing value
 Prelude> Last (Just 1) `mappend` Last (Just 2)
 Last {getLast = Just 2}
 ``` 
@@ -92,6 +93,7 @@ Recall (again) that typeclasses have **unique** pairings of the class & instance
 An *orphan instance* is when an instance is defined for a datatype and typeclass, but not in the same module as the declaration of either the typeclass or datatype. (GHC will warn about this.) If you don't "own" the typeclass or datatype, newtype it!
 
 If you
+
 1. Defined the type but not the typeclass: put the instance in the same module as the type so that the type cannot be imported without its instances.
 2. Defined the typeclass but not the type: put the instance in the same module as the typeclass definition so that the typeclass cannot be imported without its instances.
 3. Defined neither the type nor typeclass: define your own newtype to wrap the original type - now it belongs to you.
