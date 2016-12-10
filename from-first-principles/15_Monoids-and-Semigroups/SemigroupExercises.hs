@@ -99,11 +99,9 @@ type CombineAssoc a b = (Combine a b) -> (Combine a b) -> (Combine a b) -> Bool
 ----------------------- 10 ----------------------
 newtype Comp a = Comp { unComp :: (a -> a) }
 
--- Same thing as Combine - author probably looking for something else here?
-instance Semigroup a => Semigroup (Comp a) where
-  cf <> cg = Comp $ \x -> f x <> g x
-    where f = unComp cf
-          g = unComp cg
+-- Derp composition
+instance Semigroup (Comp a) where
+  (Comp f) <> (Comp g) = Comp $ f . g
 
 ----------------------- 10 ----------------------
 data Validation a b = Failure a | Success b deriving (Eq, Show)
