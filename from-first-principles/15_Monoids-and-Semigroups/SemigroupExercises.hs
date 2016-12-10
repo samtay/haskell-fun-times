@@ -1,8 +1,9 @@
 #!/usr/bin/env stack
 -- stack runghc --resolver lts-7 --install-ghc --package QuickCheck
+module SemigroupExercises where
 
 import Data.Semigroup
-import Test.QuickCheck
+import Test.QuickCheck hiding (Failure, Success)
 import Control.Monad
 
 -- Given a datatype, implement the Semigroup instance.
@@ -87,10 +88,81 @@ newtype Combine a b =
 -- Sum {getSum = 4}
 -- >>> unCombine (g <> f) $ 1
 -- Sum {getSum = 2}
+instance Semigroup b => Semigroup (Combine a b) where
+  cf <> cg = Combine $ \x -> f x <> g x
+    where f = unCombine cf
+          g = unCombine cg
+type CombineAssoc a b = (Combine a b) -> (Combine a b) -> (Combine a b) -> Bool
+-- http://www.cis.upenn.edu/~bcpierce/courses/advprog/lectures/lec18.pdf
+-- taking too long to figure out how to generate random funcs, leaving for later
 
--- TODO Solve this one, then explore CoArbitrary to test it (needs arbitrary functions!)
+----------------------- 10 ----------------------
+newtype Comp a = Comp { unComp :: (a -> a) }
 
--- Some necessary arbitrary instances for testing --
+-- Same thing as Combine - author probably looking for something else here?
+instance Semigroup a => Semigroup (Comp a) where
+  cf <> cg = Comp $ \x -> f x <> g x
+    where f = unComp cf
+          g = unComp cg
+
+----------------------- 10 ----------------------
+data Validation a b = Failure a | Success b deriving (Eq, Show)
+
+instance Semigroup a => Semigroup (Validation a b) where
+  Success x <> Success y = Success y
+  Failure x <> Failure y = Failure $ x <> y
+  Failure x <> _         = Failure x
+  _         <> Failure x = Failure x
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Validation a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    frequency [ (1, return $ Failure a)
+              , (1, return $ Success b) ]
+
+type ValAssoc a b = (Validation a b) -> (Validation a b) -> (Validation a b) -> Bool
+
+----------------------- 11 ----------------------
+newtype AccumulateRight a b =
+  AccumulateRight (Validation a b)
+  deriving (Eq, Show)
+
+instance Semigroup b =>
+  Semigroup (AccumulateRight a b) where
+    (<>) (AccumulateRight vx) (AccumulateRight vy) = AccumulateRight $ vx <<>> vy where
+      Success x <<>> Success y = Success $ x <> y
+      Failure x <<>> Failure y = Failure x
+      Success x <<>> _         = Success x
+      _         <<>> Success x = Success x
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (AccumulateRight a b) where
+  arbitrary = arbitrary >>= return . AccumulateRight
+
+type AccRightAssoc a b =
+  (AccumulateRight a b) -> (AccumulateRight a b) -> (AccumulateRight a b) -> Bool
+
+
+----------------------- 11 ----------------------
+newtype AccumulateBoth a b =
+  AccumulateBoth (Validation a b)
+  deriving (Eq, Show)
+
+instance (Semigroup a, Semigroup b) =>
+  Semigroup (AccumulateBoth a b) where
+    (<>) (AccumulateBoth vx) (AccumulateBoth vy) = AccumulateBoth $ vx <<>> vy where
+      Success x <<>> Success y = Success $ x <> y
+      Failure x <<>> Failure y = Failure $ x <> y
+      Failure x <<>> _         = Failure x
+      _         <<>> Failure x = Failure x
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (AccumulateBoth a b) where
+  arbitrary = arbitrary >>= return . AccumulateBoth
+
+type AccBothAssoc a b = (AccumulateBoth a b) -> (AccumulateBoth a b) -> (AccumulateBoth a b) -> Bool
+
+-------------------------------------------------
+-- Some necessary arbitrary instances for testing
 
 instance (Arbitrary a) => Arbitrary (Sum a) where
   arbitrary = arbitrary >>= return . Sum
@@ -112,3 +184,9 @@ main = do
   quickCheck (semigroupAssoc :: TwoAssoc Any All)
   quickCheck (semigroupAssoc :: OrAssoc String All)
   quickCheck (semigroupAssoc :: OrAssoc Any All)
+  quickCheck (semigroupAssoc :: ValAssoc (Sum Int) Int)
+  quickCheck (semigroupAssoc :: ValAssoc All String)
+  quickCheck (semigroupAssoc :: AccRightAssoc Int (Product Int))
+  quickCheck (semigroupAssoc :: AccRightAssoc Double [String])
+  quickCheck (semigroupAssoc :: AccBothAssoc (Sum Int) (Product Int))
+  quickCheck (semigroupAssoc :: AccBothAssoc All [String])
