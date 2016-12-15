@@ -1,4 +1,4 @@
-module Log where
+module Log.Base where
 
 import Control.Applicative
 
