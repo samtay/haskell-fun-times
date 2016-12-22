@@ -81,7 +81,7 @@ Let's take a look at nested structures
 Very cool. Here we are composing `fmap` to access structures within structures.
 Playing in GHCi we can verify how this works:
 ```haskell
-(,)  :: (b -> c) -> (a -> b) -> a -> c
+(.)  :: (b -> c) -> (a -> b) -> a -> c
 
 -- and for Functors f, g
 fmap :: (a -> b)     -> f a   -> f b
@@ -90,7 +90,7 @@ fmap :: (f a -> f b) -> g f a -> g f b
 -- recalling that functions associate to the right, composing higher order functions
 -- leaves them partially applied: a -> z -> y will compose as a -> (z -> y)
 -- hence
--- a ~> a -> b and b ~> f a -> fb
+-- a ~> a -> b and b ~> f a -> f b
 fmap :: (a -> b)                    -- as first arg to (.)
      :: ((a -> b) -> (f a -> f b)
      :: (b -> c)                    -- as second arg to (.)
