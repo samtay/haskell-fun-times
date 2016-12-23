@@ -173,4 +173,25 @@ The default list monoid in Prelude is concatenation, but if we constrain the typ
 [x1,x2,x3] <> [y1,y2,y3]
  = [x1 <> y1, x2 <> y2, x3 <> y3]
 ```
+
+#### List and ZipList Applicatives
 See [ZipList.hs](./ZipList.hs) for `List` and `ZipList` instances, and some quickchecking on them.
+
+#### Either versus Validation
+Since monoids instances are not unique per type, like functors, applicatives can also have more than one valid instance per type. `Either` has an alternative applicative called `Validation`:
+```haskell
+data Validation err a =
+    Failure err
+  | Success a
+  deriving (Eq, Show)
+
+-- natural transformations for Validation <-> Either
+
+validToEither :: Validation e a -> Either e a
+validToEither (Failure err) = Left err
+validToEither (Success a)   = Right a
+-- etc
+```
+
+Validation is just like Either, except instead of short-circuiting on the first `Left` value, it accumulates `Failure` values in a monoidal manner. See [Validation.hs](./Validation.hs) for instance definitions.
+
