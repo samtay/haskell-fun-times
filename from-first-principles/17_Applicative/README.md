@@ -112,3 +112,65 @@ Identity [1,2,3]
 ```
 In the first example, we have the list monoidal effect of `<*>`.
 In the second, we limit the monoidal affects by having them applied to the wrapper structure `Identity`, where the "effects" are minimal.
+
+See instances of Identity and Constant in [IdentityConstant.hs](./IdentityConstant.hs).
+
+### Fixer Upper
+
+##### `const <$> Just "Hello" <*> "World"`
+```haskell
+λ> const <$> Just "Hello" <*> pure "World"
+Just "Hello"
+```
+
+##### `(,,,) Just 90 <*> Just 10 Just "Tierness" [1,2,3]
+```haskell
+λ> (,,,) <$> Just 90 <*> Just 10 <*> Just "Tierness" <*> pure [1,2,3]
+Just (90,10,"Tierness",[1,2,3])
+-- or
+λ> (,,) <$> (liftA2 (+) (Just 90) (Just 10)) <*> Just "Tierness" <*> pure [1,2,3]
+Just (100,"Tierness",[1,2,3])
+```
+
+### 17.6 Applicative Laws
+
+1. **Identity**
+
+  ```haskell
+  pure id <*> v = v
+  -- Putting 'id' into an applicative structure f via 'pure'
+  -- should not produce side effects: f id <*> f x = f x
+  ```
+2. **Composition**
+
+  ```haskell
+  pure (.) <*> u <*> v <*> w = u <*> (v <*> w)
+  -- Putting the act of composition into an applicative structure
+  -- should not produce side effects
+  ```
+3. **Homomorphism**
+
+  ```haskell
+  pure f <*> pure x = pure (f x)
+  -- Basically assuring that 'pure' is homomorphic, preserving
+  -- the algebraic isomorphism between categories,
+  -- such as the normal space and the applicative 'f' space
+  ```
+4. **Interchange**
+
+  ```haskell
+  u <*> pure y = pure ($ y) <*> u
+  -- Putting the act of function application into an applicative structure
+  -- shuld not produce side effects
+  ```
+
+### 17.7 You knew this was coming
+Of course, [quickchecking applicative laws](./QuickChecking.hs).
+
+### 17.8 ZipList Monoid
+The default list monoid in Prelude is concatenation, but if we constrain the type of the contents to monoids, here is another instance:
+```haskell
+[x1,x2,x3] <> [y1,y2,y3]
+ = [x1 <> y1, x2 <> y2, x3 <> y3]
+```
+See [ZipList.hs](./ZipList.hs) for `List` and `ZipList` instances, and some quickchecking on them.
