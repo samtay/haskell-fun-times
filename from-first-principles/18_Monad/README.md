@@ -135,6 +135,7 @@ Prelude> fst twoActions
 ```
 
 So, returning to getting and printing the line:
+
 1. First `getLine` performs `IO` to get a `String` resulting in `IO String`.
 2. And `putStrLn` takes a `String` argument, performs `IO`, and returns "nothing": `String -> IO ()`.
 3. Thus `putStrLn <$> getLine :: IO (IO ()) `
@@ -315,3 +316,47 @@ instance Monad (Sum a) where
   First x >>= _  = First x
   Second y >>= f = f y
 ```
+
+### Monad laws
+#### Identity laws
+```haskell
+-- right identity
+m >>= return = m
+
+-- left identity
+return x >>= f = f x
+```
+These laws are ensuring that `return` is neutral and doesn't do anything unexpected to a value `x` when it puts it into the monad structure as `m x`.
+
+#### Associativity
+```haskell
+(m >>= f) >>= g = m >>= (\x -> f x >>= g)
+```
+
+### 18.6 Application and composition
+Recall that in functor and applicative, function composition was guaranteed by the laws:
+```haskell
+fmap id = id
+
+-- guarantees ==>
+
+fmap f . fmap g = fmap (f . g)
+```
+It was also a bit simpler to reason about, since the function arguments `(a -> b)` to `<$>` and `<*>` were not concerned with the structure `f`.
+
+With monadic functions we need to worry about chaining around the monad `m`, since the function arguments are of type `(a -> m b)`. Luckily `(>>=)` handles this out of the box:
+```haskell
+mcomp :: Monad m => (b -> m c) -> (a -> m b) -> a -> m c
+mcomp f g a = g a >>= f
+```
+Haskell already has this implemented via *Kleisli composition*:
+```haskell
+-- Note this is like flip (.), not (.)
+(>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
+
+-- This one is like (.)
+(<=<) :: Monad m => (b -> m c) -> (a -> m b) -> a -> m c
+```
+
+### 18.7 Chapter Exercises
+See exercises in [Instances.hs](./Instances.hs) and [Funcs.hs](./Funcs.hs).
