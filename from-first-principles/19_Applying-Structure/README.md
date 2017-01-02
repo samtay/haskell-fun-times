@@ -60,7 +60,7 @@ instance Monoid b => Monoid (a -> b)
 
 ### 19.3 Functor
 #### Lifting over IO
-Lifting a a normal time function into IO:
+Lifting a normal time function into IO:
 ```haskell
 import Data.Time.Clock
 
@@ -179,3 +179,68 @@ and write
 ```
 
 ### 19.5 Monad
+Since effectful programming is constrained in Haskell in `IO`, examples of monad usage are abundant. Here are a few different, interesting use cases.
+
+#### Opening a network socket
+```haskell
+import Network.Socket
+openSocket :: FilePath -> IO Socket
+openSocket p = do
+  sock <- socket AF_UNIX Stream defaultProtocol
+  connect sock sockAddr
+  return sock
+  where sockAddr = SockAddrUnix . encodeString $ p
+```
+
+#### Binding over failure in initialization
+This `main` function is more typical; the outermost monad is `IO` but the monad transformer variant of `Either`, called `EitherT`, binds over the possibility of failure to pull up correct configuration in constructing an initialization function:
+```haskell
+main :: IO ()
+main = do
+  initAndFp <- runEitherT $ do
+    fp <- tryHead NoConfig =<< lift getArgs
+    initCfg <- load' fp
+    return (initCfg, fp)
+  either bail (uncurry boot) initAndFp
+  where
+    boot initCfg fp =
+      void $ runMVC mempty
+             oracleModel (core initCfg fp)
+    bail NoConfig =
+      errorExit "Please pass a config"
+    bail (InvalidConfig e) =
+      errorExit ("Invalid config " ++ show e)
+    load' fp =
+      hoistEither
+      . fmapL InvalidConfig =<< lift (load fp)
+```
+
+### 19.6 An end-to-end example: URL shortener
+See [shawty](./shawty) for code.
+
+#### Brief aside about polymorphic literals
+We start off [our code](./shawty/src/Main.hs) with the language extension
+`{-# LANGUAGE OverloadedStrings #-}`.
+This is a way to make `String` literals polymorphic, just like numeric literals are polymorphic over the `Num` typeclass. This way we can use string literals as `Text` and `ByteString` values. Notice the similarities:
+```haskell
+class IsString a where
+  fromString :: String -> a
+
+class Num a where
+  -- irrelevant bits elided
+  fromInteger :: Integer -> a
+
+class Num a => Fractional a where
+  -- Elision again
+  fromRational :: Rational -> a
+```
+and see the effect:
+```haskell
+Prelude> :set -XOverloadedStrings
+Prelude> :t 1
+1 :: Num a => a
+Prelude> :t 1.0
+1.0 :: Fractional a => a
+Prelude> :t "blah"
+"blah" :: IsString a => a
+```
