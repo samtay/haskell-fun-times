@@ -23,9 +23,13 @@ randomElement xs = do
   randomDigit <- SR.randomRIO (0, maxIndex) :: IO Int
   return (xs !! randomDigit)
 
-shortyGen :: IO String
-shortyGen =
-  replicateM 7 (randomElement alphaNum)
+shortyGen :: R.Connection -> IO String
+shortyGen conn = do
+  candidate <- replicateM 7 (randomElement alphaNum)
+  check     <- getURI conn (BC.pack candidate)
+  case check of
+    Left  _ -> return candidate
+    Right _ -> shortyGen conn
 
 saveURI :: R.Connection
         -> BC.ByteString
@@ -71,7 +75,7 @@ app rConn = do
         parsedUri = parseURI (TL.unpack uri)
     case parsedUri of
       Just _  -> do
-        shawty <- liftIO shortyGen
+        shawty <- liftIO $ shortyGen rConn
         let shorty = BC.pack shawty
             uri' = encodeUtf8 (TL.toStrict uri)
         resp <- liftIO (saveURI rConn shorty uri')
