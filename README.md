@@ -10,7 +10,7 @@ Just a repo of me learning and playing with haskell
 ## future
 
 #### courses
-- Brent Yorgey's cis194 [online lectures & assignments](http://cis.upenn.edu/~cis194/spring13/lectures.html)
+- Joachim Breitner's CIS 194 [online lectures & assignments](http://www.seas.upenn.edu/~cis194/fall16/). At least weeks >= 11, which seem very focused on applied haskell.
 
 #### books
 - Pearls of functional design by Richard Bird ([amazon link](https://www.amazon.com/Pearls-Functional-Algorithm-Design-Richard/dp/0521513383) but pdf easily found online)
