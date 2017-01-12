@@ -1,5 +1,7 @@
 module Golf where
 
+import Data.Monoid
+
 -- Exercise 1 Hopscotch
 
 -- | 'skips' maps a function 'fn' over an array of integers 1,..,n
@@ -48,3 +50,38 @@ localMaxima = thrd . foldr lM' (Nothing,Nothing,[])
 
 thrd :: (a,b,c) -> c
 thrd (_,_,c) = c
+
+-- Exercise 3 Histogram
+
+newtype Map k v = Map { mkMap :: [(k,v)] } deriving (Eq,Show)
+instance (Eq k, Monoid v) => Monoid (Map k v) where
+  mempty = Map []
+  mappend (Map xs) (Map ys) = foldr cons (Map ys) xs
+
+instance Foldable (Map k) where
+  foldMap toM (Map xs) = mconcat $ map (toM . snd) xs
+
+cons :: (Monoid v, Eq k) => (k, v) -> Map k v -> Map k v
+cons (k,v) (Map xs) = Map $ maybe
+  ((k,v) : xs)
+  (\t -> (k, v <> t) : filter ((/=k) . fst) xs)
+  (lookup k xs)
+
+max' :: (Foldable t, Ord x, Num x) => t x -> x
+max' xs = if null xs then 0 else maximum xs
+
+lookup' :: Eq a => a -> Map a b -> Maybe b
+lookup' i (Map xs) = lookup i xs
+
+histogram :: [Integer] -> String
+histogram = fmt . foldr (\x ms -> (x,1) `cons` ms) (Map [])
+
+fmt :: Map Integer (Sum Integer) -> String
+fmt xs = unlines $ bars xs
+  ++ [ replicate 10 '='
+     , ['0'..'9'] ]
+
+bars :: Map Integer (Sum Integer) -> [String]
+bars gs = reverse $ map
+  (\ln -> map (\i -> maybe ' ' (\l -> if (getSum l) >= ln then '*' else ' ') $ lookup' i gs) [0..9])
+  [1..getSum $ max' gs]
