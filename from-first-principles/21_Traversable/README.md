@@ -106,4 +106,92 @@ traverse f xs        :: Maybe [b]
 ```
 
 ### 21.6 Morce code revisited
-Back in the [morse code example](../14_Testing/morse/src/Morse.hs).
+Back in the [morse code example](../14_Testing/morse/src/Morse.hs):
+```haskell
+-- Previously, we fmapped from [Char] to [Maybe Char] and then sequenced to Maybe [Char]
+stringToMorse :: String -> Maybe [Morse]
+stringToMorse s = sequence $ fmap charToMorse s
+
+-- With traverse, this is much cleaner:
+stringToMorse :: String -> Maybe [Morse]
+stringToMorse = traverse charToMorse
+```
+
+As an aside: we defined `traverse` above as `traverse f = sequenceA . fmap f`. We lift the function `f` by partially applying `fmap` and then use composition in the normal fashion. We could eta reduce this by composing *twice*:
+```haskell
+λ> :t \f -> sequence . fmap f
+(Monad m, Traversable t) => (a -> m b) -> t a -> m (t b)
+λ> :t (sequence .) . fmap
+(Monad m, Traversable t) => (a -> m b) -> t a -> m (t b)
+```
+That double `.` looks a bit weird; it's because `fmap` takes *two* arguments, so we need to compose twice to await a second argument for `fmap` to get applied to. If only composed once, the second argument would not behave as expected:
+```haskell
+-- correct
+(sequence .) . fmap = \f xs -> sequence (fmap f xs)
+
+-- incorrect
+sequence . fmap = \f -> sequence (fmap f)
+```
+
+To recap, `sequence` is the bit unique to the `Traversable` class, and `traverse` is just `sequence` and `fmap`, but you end up `fmap`ing before `sequence` very often.
+This is just like how `join` is the bit unique to `Monad`, and `>>=` is `join` composed with `fmap`, but it turns out that's what you need most of the time.
+
+### 21.7 Axing tedious code
+Let's take a look at some code that needs refactoring:
+```haskell
+data Query     = Query
+data SomeObj   = SomeObj
+data IoOnlyObj = IoOnlyObj
+data Err       = Err
+
+-- There's a decoder function that makes
+-- some object from String
+decodeFn :: String -> Either Err SomeObj
+decodeFn = undefined
+
+-- There's a query, that runs against DB and
+-- returns array of strings
+fetchFn :: Query -> IO [String]
+fetchFn = undefined
+
+-- there's some additional "context initializer",
+-- that also has IO side-effects
+makeIoOnlyObj :: [SomeObj]
+              -> IO [(SomeObj, IoOnlyObj)]
+makeIoOnlyObj = undefined
+
+-- the function we're examining
+pipelineFn :: Query
+           -> IO (Either Err [(SomeObj, IoOnlyObj)])
+pipelineFn query = do
+  a <- fetchFn query
+  case sequence (map decodeFn a) of
+    (Left err) -> return $ Left $ err
+    (Right res) -> do
+      a <- makeIoOnlyObj res
+      return $ Right a
+```
+There are three things that should stand out in need of refactor:
+
+1. the use of `sequence (map ..)`
+2. manualling casing on the result of `sequence (map ..)`
+3. binding monadically over Either only to perform another monadic (IO) action inside Either
+
+The refactored version is much shorter:
+```haskell
+-- the function we're examining
+pipelineFn :: Query
+           -> IO (Either Err [(SomeObj, IoOnlyObj)])
+pipelineFn query = do
+  a <- fetchFn query
+  traverse makeIoOnlyObj (mapM decodeFn a)
+  -- or traverse makeIoOnlyObj (traverse decodeFn a)
+```
+The `traverse decodeFn` is acting on Traversable list and Either monad, while `traverse makeIoOnlyObj` is acting on Traversable Either and IO monad.
+Or we can go pointfree:
+```haskell
+pipelineFn =
+  (traverse makeIoOnlyObj . traverse decodeFn =<<) . fetchFn
+```
+
+### 21.8 Do all the things
