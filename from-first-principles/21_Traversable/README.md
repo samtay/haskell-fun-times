@@ -195,3 +195,104 @@ pipelineFn =
 ```
 
 ### 21.8 Do all the things
+```haskell
+module HttpStuff where
+
+import Data.ByteString.Lazy hiding (map)
+import Network.Wreq
+
+urls :: [String]
+urls = [ "http://httpbin.com/ip"
+       , "http://httpbin.org/bytes/5"
+       ]
+
+mappingGet :: [IO (Response ByteString)]
+mappingGet = map get urls
+
+traversedUrls :: IO [Response ByteString]
+traversedUrls = traverse get urls
+```
+
+#### Strength for understanding
+Traversable is *stronger* than both Functor and Foldable. Watch how we can recover their functions:
+```haskell
+-- fmap
+λ> import Data.Functor.Identity
+λ> let fmap' f t = runIdentity $ traverse (Identity . f) t
+λ> :t fmap'
+fmap' :: Traversable t => (a -> b) -> t a -> t b
+λ> fmap' (+1) [1..5]
+[2,3,4,5,6]
+
+-- foldMap
+λ> import Data.Monoid
+λ> import Data.Functor.Constant
+λ> let foldMap' f t = getConstant $ traverse (Constant . f) t
+λ> :t foldMap'
+foldMap' :: (Monoid a, Traversable t) => (a1 -> a) -> t a1 -> a
+```
+
+### 21.9 Traversable instances
+#### Either
+```haskell
+instance Traversable (Either a) where
+  traverse _ (Left x)  = pure (Left x)
+  traverse f (Right y) = Right <$> f y
+```
+
+#### Tuple
+```haskell
+instance Traversable ((,) a) where
+  traverse f (x,y)  = (,) x <$> f y
+```
+
+### 21.10 Traversable Laws
+The **traverse** function must satisfy the following:
+
+1. Naturality
+
+  ```haskell
+  t . traverse f = traverse (t . f)
+  ```
+  Function composition behaves in unsurprising ways, whether within the traversed function or on the outer layer, once the traversed function has already generated the applicative structure.
+
+2. Identity
+
+  ```haskell
+  traverse Identity = Identity
+  ```
+  Traversing the data constructor of Identity will produce the same result as just putting the value in Identity.
+  Hence Identity represents a "structural" identity for traversing data.
+  That is, the Traversable instance cannot add or inject any structure or unsuspecting "effects".
+
+3. Composition
+
+  ```haskell
+  traverse (Compose . fmap g . f)
+    = Compose . fmap (traverse g) . traverse f
+  ```
+  We can collapse sequential traversals into a single traversal
+
+The **sequenceA** function must satisfy the following:
+
+1. Naturality
+
+  ```haskell
+  t . sequenceA = sequenceA . fmap t
+  ```
+
+2. Identity
+
+  ```haskell
+  sequenceA . fmap Identity = Identity
+  ```
+
+3. Composition
+
+  ```haskell
+  sequenceA . fmap Compose
+    = Compose . fmap sequenceA . sequenceA
+  ```
+
+### 21.11 Quality Control
+See [QuickChecker.hs](./QuickChecker.hs) for examples quickchecking Traversable instances.
