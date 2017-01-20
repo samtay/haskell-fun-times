@@ -7,13 +7,36 @@
 -}
 module QuickChecking where
 
-import Test.QuickCheck.Checkers (quickBatch)
+import Test.QuickCheck (Arbitrary(..))
+import Test.QuickCheck.Checkers (quickBatch, EqProp(..), eq)
 import Test.QuickCheck.Classes (traversable)
-import Data.Monoid (Sum)
 
-type TI = []
+-- 1 Identity
+newtype Identity a = Identity a
+  deriving (Eq, Ord, Show)
 
-trigger :: TI (String, Int, String)
+instance Functor Identity where
+  fmap f (Identity x) = Identity $ f x
+
+instance Foldable Identity where
+  foldMap f (Identity x) = f x
+
+instance Traversable Identity where
+  traverse f (Identity x) = Identity <$> f x
+
+----------------- Testing stuff -----------------
+
+-- Arbitrary instances
+instance Arbitrary a => Arbitrary (Identity a) where
+  arbitrary = Identity <$> arbitrary
+
+instance (Eq a) => EqProp (Identity a) where
+  (=-=) = eq
+
+-- Trigger type
+type Trigger = (String, Int, String)
 trigger = undefined
 
-main = quickBatch $ traversable trigger
+-- IO runtime
+main =
+  quickBatch $ traversable (trigger :: Identity Trigger)
