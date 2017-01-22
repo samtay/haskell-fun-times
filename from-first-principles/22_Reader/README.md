@@ -115,4 +115,29 @@ Reader is a newtype wrapper for functions:
 ```haskell
 newtype Reader r a =
   Reader { runReader :: r -> a }
+
+instance Functor (Reader r) where
+  fmap :: (a -> b) -> Reader r a -> Reader r b
+  fmap f (Reader ra) = Reader $ (f . ra)
+```
+And we can see that fmap for Reader is basically
+
+1. unpack `g :: r -> a` out of Reader
+2. Compose `f` with  `g`
+3. Put `f` . `g` back into Reader
+
+#### Exercise: Ask
+```haskell
+ask :: Reader a a
+ask = Reader id
+```
+
+### 22.6 Functions have an Applicative too
+First, let's specialize the types:
+```haskell
+pure :: a -> f a
+pure :: a -> (r -> a)
+
+(<*>) :: f (a -> b) -> f a -> f b
+(<*>) :: (r -> a -> b) -> (r -> a) -> (r -> b)
 ```
