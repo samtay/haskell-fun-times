@@ -141,3 +141,140 @@ pure :: a -> (r -> a)
 (<*>) :: f (a -> b) -> f a -> f b
 (<*>) :: (r -> a -> b) -> (r -> a) -> (r -> b)
 ```
+
+#### Demonstrating the function applicative
+Given the two records:
+```haskell
+data Person =
+  Person {
+    humanName :: HumanName
+  , dogName :: DogName
+  , address :: Address
+  } deriving (Eq, Show)
+
+data Dog =
+  Dog {
+    dogsName :: DogName
+  , dogsAddress :: Address
+  } deriving (Eq, Show)
+```
+here's an example of avoiding explicitly passing around arguments:
+```haskell
+-- without Reader
+getDog :: Person -> Dog
+getDog p = Dog (dogName p) (address p)
+
+-- with Reader
+getDog :: Person -> Dog
+getDog = Dog <$> dogName <*> address
+
+-- with Reader, alternate
+import Control.Applicative (liftA2)
+getDog :: Person -> Dog
+getDog = liftA2 Dog dogName address
+```
+
+#### Exercise: Reading Comprehension
+
+1. Write `liftA2`.
+
+  ```haskell
+  myLiftA2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
+  myLiftA2 f x y = f <$> x <*> y
+  ```
+
+2. Write `asks` based on its type signature.
+
+  ```haskell
+  asks :: (r -> a) -> Reader r a
+  asks = Reader
+  ```
+
+3. Implement Applicative for Reader
+
+  ```haskell
+  {-# LANGUAGE InstanceSigs #-}
+  module Test where
+
+  newtype Reader r a = Reader { runReader :: (r -> a) }
+
+  instance Functor (Reader r) where
+    fmap f (Reader ra) = Reader $ f . ra
+
+  instance Applicative (Reader r) where
+    pure :: a -> Reader r a
+    pure a = Reader $ const a
+
+    (<*>) :: Reader r (a -> b)
+          -> Reader r a
+          -> Reader r b
+    (Reader rab) <*> (Reader ra) =
+      Reader $ \r -> rab r (ra r)
+  ```
+
+### 22.7 The Monad of functions
+This is a cute example to derive `>>=`, from specific to abstract:
+```haskell
+foo :: (Functor f, Num a) => f a -> f a
+foo r = fmap (+1) r
+
+bar :: Foldable f => t -> f a -> (t, Int)
+bar r t = (r, length t)
+
+-- combined action
+frooty :: Num a => [a] -> ([a], Int)
+frooty r = bar (foo r) r
+
+-- abstracted
+fooBind :: (r -> a) -> (a -> r -> b) -> (r -> b)
+fooBind m k = \r -> k (m r) r
+```
+
+#### Exercise: Implement the Reader Monad
+```haskell
+instance Monad (Reader r) where
+  return = pure
+  (>>=) :: Reader r a
+        -> (a -> Reader r b)
+        -> Reader r b
+  (Reader ra) >>= aRb =
+    Reader $ \r -> runReader (aRb (ra r)) r
+```
+
+### 22.8 Reader Monad by itself is kinda boring
+Because it can't do anything that the Applicative can't:
+```haskell
+instance Monad ((->) r) where
+  return = pure
+  m >>= k = flip k <*> m
+```
+Of course this isn't generally true, but we can take advantage of the fact that we're operating on functions (usage of `flip`).
+
+### 22.9 You can change what comes below, but not above
+The "read-only" means that within any given scope (say the body of a function `foo`),
+you can swap in a different type/value for the "read-only" `r` for subsequent functions that you call,
+but not for functions outside the scope, like the function calling `foo`.
+It's kind of painfully obvious, given the natural immutability of Haskell.
+However, in the next chapter the State monad will contrast this principle.
+```haskell
+outer =
+  -- foo cannot change r
+  foo r
+  -- foo cannot change r
+  other r
+
+foo r =
+  -- foo can choose to modify r for subsequence funcs
+  bar (r+1)
+
+bar r = print r
+```
+
+### 22.10 You tend to see ReaderT, not Reader
+Usually it's just one Monad in a **stack** of multiple types,
+such as the monad transformer ReaderT.
+Also, Reader of Int is almost trivial.
+Usually the type is a record of several values.
+
+### 22.11 Chapter Exercises
+Found in [ReaderPractice.hs](./ReaderPractice.hs).
