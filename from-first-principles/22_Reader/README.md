@@ -277,4 +277,8 @@ Also, Reader of Int is almost trivial.
 Usually the type is a record of several values.
 
 ### 22.11 Chapter Exercises
-Found in [ReaderPractice.hs](./ReaderPractice.hs).
+Warm up questions (odd ones, not useful as notes) in [ReaderPractice.hs](./ReaderPractice.hs).
+A more meaningful problem is [rewriting shawty](./shawty-prime/app/Main.hs)
+to use ReaderT to make the database connection available,
+instead of the [original version](https://github.com/bitemyapp/shawty-prime/blob/master/app/Main.hs)
+which manually passed the database connection to the app.
