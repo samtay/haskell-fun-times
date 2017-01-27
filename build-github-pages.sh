@@ -10,7 +10,7 @@ build() {
   local sep=$'\n\n'
   for mdFile in $(find -type f -name "*.md" -path "./$__topdir*" | sort); do
     # poor mans sorting
-    if [[ "$mdFile" == "./$__topdir/$(basename $mdFile)" ]]; then
+    if [[ "$(dirname $mdFile)" == *$__topdir ]]; then
       content="$(cat $mdFile)$sep$content"
     else
       content="$content$sep$(cat $mdFile)"
@@ -19,7 +19,7 @@ build() {
 
   # for some reason this doesn't work: pandoc -s -o "$__topdir.html" "$mdFiles"
   rm -f "$__topdir.html"
-  echo "$content" | pandoc --read=markdown_github --standalone --output "$__topdir.html"
+  echo "$content" | pandoc --read=markdown_github --standalone --output "$__topdir.html" $cssOpts
 }
 
 # compiles haskell files
@@ -54,7 +54,7 @@ main() {
     build
     sed -i -e "s/.\/$__topdir/$__topdir.html/g" README.md
   done
-  pandoc -s -o "index.html" README.md
+  pandoc -s -o "index.html" $cssOpts README.md
 
   # send off to github
   for f in "${topdirs[@]}"; do
@@ -67,5 +67,7 @@ main() {
   cleanup
   git checkout master
 }
+
+cssOpts="-c https://necolas.github.io/normalize.css/latest/normalize.css -c https://gist.githubusercontent.com/dashed/6714393/raw/ae966d9d0806eb1e24462d88082a0264438adc50/github-pandoc.css -c /haskell-fun-times/.css/custom.css"
 
 main "$@"
