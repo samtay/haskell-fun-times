@@ -48,6 +48,8 @@ main() {
   # sync with master
   git checkout gh-pages
   git reset --hard master
+  mkdir css
+  git mv .css/custom.css css/custom.css
 
   # build HTML content
   for __topdir in ${topdirs[@]}; do
@@ -68,6 +70,6 @@ main() {
   git checkout master
 }
 
-cssOpts="-c https://necolas.github.io/normalize.css/latest/normalize.css -c https://gist.githubusercontent.com/dashed/6714393/raw/ae966d9d0806eb1e24462d88082a0264438adc50/github-pandoc.css -c /haskell-fun-times/.css/custom.css"
+cssOpts="-c https://necolas.github.io/normalize.css/latest/normalize.css -c https://gist.githubusercontent.com/dashed/6714393/raw/ae966d9d0806eb1e24462d88082a0264438adc50/github-pandoc.css -c /haskell-fun-times/css/custom.css"
 
 main "$@"
