@@ -101,3 +101,32 @@ That is, a single parser should be able to parse all three of those strings.
   ```
 
 ### 24.4 Parsing fractions
+Look how simple it is to create a fraction parser!
+```haskell
+{-# LANGUAGE OverloadedStrings #-}
+module Text.Fractions where
+
+import Control.Applicative
+import Data.Ratio ((%))
+import Text.Trifecta
+
+parseFraction :: Parser Rational
+parseFraction = do
+  numerator <- decimal
+  char '/'
+  denominator <- decimal
+  return (numerator % denominator)
+
+virtuousFraction :: Parser Rational
+virtuousFraction = do
+  numerator <- decimal
+  char '/'
+  denominator <- decimal
+  case denominator of
+    0 -> fail "Denominator cannot be zero"
+    _ -> return (numerator % denominator)
+```
+The `virtuousFraction` handles a 0 denominator error by using the monad `fail` function,
+which is how we indicate parsing errors in trifecta parsing,
+and allows us to handle our errors in the type system.
+The initial `parseFraction` would crash when parsing "1/0" which is amateur hour esque.
