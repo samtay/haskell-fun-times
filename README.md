@@ -31,6 +31,7 @@ Just a repo of me learning and playing with haskell
 - Using [exceptions](https://www.fpcomplete.com/blog/2016/11/exceptions-best-practices-haskell) properly
 - [Intermediate Haskell](https://www.schoolofhaskell.com/user/commercial/outline/intermediate-haskell#general-patterns)
 - Practical usage example of [ReaderT](https://slpopejoy.github.io/posts/Effectful02.html) (good for dockmaster!)
+- [Parsing](http://www.serpentine.com/blog/2007/01/31/parsing-a-simple-config-file-in-haskell/) a simple config file
 
 #### misc
 - Great [brain dump](http://dev.stephendiehl.com/hask/) by Stephen Diehl
