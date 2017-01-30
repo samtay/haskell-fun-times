@@ -130,3 +130,91 @@ The `virtuousFraction` handles a 0 denominator error by using the monad `fail` f
 which is how we indicate parsing errors in trifecta parsing,
 and allows us to handle our errors in the type system.
 The initial `parseFraction` would crash when parsing "1/0" which is amateur hour esque.
+
+#### Exercise: Unit of Success
+Modify the parser `integer >> eof` to parse the same content (i.e., parse string that ends in integer) but returns the integer instead of `()`.
+```haskell
+-- original
+Prelude> parseString (integer >> eof) mempty "123abc"
+Failure (interactive):1:4: error: expected: digit,
+end of input
+123abc<EOF>
+^
+
+Prelude> parseString (integer >> eof) mempty "123"
+Success ()
+
+-- solution
+inteof :: Parser Integer
+inteof = do
+  x <- integer
+  eof
+  return x
+
+-- or more succinctly (discovered in next section)
+inteof = integer <* eof
+```
+
+### 24.5 Haskell's parsing ecosystem
+Haskell has several other excellent parsing libraries:
+
+- parsec - popular
+- attoparsec - popular
+- megaparsec
+- aeson - for json
+- cassava - for csv
+
+We're using trifecta in this chapter because it has great error messages.
+If doing parsing in production, where speed is paramount, `attoparsec` is a good option.
+
+#### Typeclasses of Parsers
+The `Parsing` typeclass has `Alternative` as a superclass and is provided for functionality needed to describe parsers independent of input type.
+Minimally, we must define `try`, `(<?>)`, and `notFollowedBy`:
+```haskell
+-- Text.Parser.Combinators
+class Alternative m => Parsing m where
+  {-# MINIMAL try, (<?>), notFollowedBy #-}
+  try :: m a -> m a
+  (<?>) :: m a -> String -> m a
+  notFollowedBy :: Show a => m a -> m ()
+  skipMany :: m a -> m ()
+  skipSome :: m a -> m ()
+  unexpected :: String -> m a
+  eof :: m ()
+```
+
+1. `try`: takes a parser that may consume input, and on failure goes back to where it started, and fails if we didn't consume input.
+2. `notFollowedBy`: does not consume input, but allows us to specify that a successful match is one *not followed by* other input.
+
+  ```haskell
+  λ> print $ parseString (integer <* notFollowedBy  eof) mempty "123abc"
+  Success 123
+  λ> print $ parseString (integer <* notFollowedBy  eof) mempty "123"
+  Failure (..)
+  ```
+
+3. `unexpected`: signals error
+4. `eof`: only succeeds at end of input
+
+The library also defines `CharParsing`, which has `Parsing` as a superclass, and exists to parse individual characters.
+```haskell
+-- Text.Parser.Char
+class Parsing m => CharParsing (m :: * -> *) where
+  char :: Char -> m Char
+  notChar :: Char -> m Char
+  anyChar :: m Char
+  string :: String -> m String
+  text :: Text -> m Text
+  satisfy :: (Char -> Bool) -> m Char
+```
+
+1. `char`: parses and returns a single character equal to the one provided
+2. `notChar`: parses and returns any single character not equal to the one provided
+3. `anyChar`: succeeds for any character, returns the character parsed
+4. `string`: parses a sequence of characters, returns the string parsed
+5. `text`: parses sequence of characters represented by Text value, returns parsed Text fragment
+
+A reminder: this barely scratches the surface of these libraries.
+Some documentation spelunking is in order.
+
+### 24.6 Alternative
