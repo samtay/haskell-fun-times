@@ -8,18 +8,42 @@ build() {
   ## aggregate all .md files
   local content=""
   local sep=$'\n\n'
-  for mdFile in $(find -type f -name "*.md" -path "./$__topdir*" | sort); do
-    # poor mans sorting
-    if [[ "$(dirname $mdFile)" == *$__topdir ]]; then
-      content="$(cat $mdFile)$sep$content"
-    else
-      content="$content$sep$(cat $mdFile)"
-    fi
-  done
+  if [[ "$__topdir" == "from-first-principles" ]]; then
+    content=$(build_ffp)
+  else
+    for mdFile in $(find -type f -name "*.md" -path "./$__topdir*" | sort); do
+      # poor mans sorting
+      if [[ "$(dirname $mdFile)" == *$__topdir ]]; then
+        content="$(cat $mdFile)$sep$content"
+      else
+        content="$content$sep$(cat $mdFile)"
+      fi
+    done
+  fi
 
   # for some reason this doesn't work: pandoc -s -o "$__topdir.html" "$mdFiles"
   rm -f "$__topdir.html"
   echo "$content" | pandoc --read=markdown_github --standalone --output "$__topdir.html" $cssOpts
+}
+
+# build specifc to f-f-p directory structure
+build_ffp() {
+  # toplevel
+  for f in $(find "$__topdir" -maxdepth 1 -type f -name "*.md"); do
+    cat "$f"
+  done
+  # each chapter
+  for ch in $(find "$__topdir" -mindepth 1 -maxdepth 1 -type d | sort); do
+    local content=""
+    for f in $(find "$ch" -name "*.md"); do
+      if [[ $(basename $f) == "README.md" ]]; then
+        content="$(cat $f)$content"
+      else
+        content="$content$(cat $f)"
+      fi
+    done
+    echo "$content"
+  done
 }
 
 # compiles haskell files
