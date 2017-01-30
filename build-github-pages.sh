@@ -27,22 +27,13 @@ build() {
 }
 
 # build specifc to f-f-p directory structure
+# just do the damn readme files
 build_ffp() {
   # toplevel
-  for f in $(find "$__topdir" -maxdepth 1 -type f -name "*.md"); do
-    cat "$f"
-  done
+  cat from-first-principles/README.md
   # each chapter
-  for ch in $(find "$__topdir" -mindepth 1 -maxdepth 1 -type d | sort); do
-    local content=""
-    for f in $(find "$ch" -name "*.md"); do
-      if [[ $(basename $f) == "README.md" ]]; then
-        content="$(cat $f)$content"
-      else
-        content="$content$(cat $f)"
-      fi
-    done
-    echo "$content"
+  for f in $(find from-first-principles -mindepth 2 -name "README.md" | sort); do
+    cat "$f"
   done
 }
 
