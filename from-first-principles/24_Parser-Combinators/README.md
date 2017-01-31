@@ -218,3 +218,98 @@ A reminder: this barely scratches the surface of these libraries.
 Some documentation spelunking is in order.
 
 ### 24.6 Alternative
+Alternative is pretty much exactly what it sounds like.
+Here's the definition:
+```haskell
+class Applicative f => Alternative f where
+  -- | The identity of '<|>'
+  empty :: f a
+
+  -- | An associative binary operation
+  (<|>) :: f a -> f a -> f a
+
+  -- | One or more.
+  some :: f a -> f [a]
+  some v = some_v
+    where
+      many_v = some_v <|> pure []
+      some_v = (fmap (:) v) <*> many_v
+
+  -- | Zero or more.
+  many :: f a -> f [a]
+  many v = many_v
+    where
+      many_v = some_v <|> pure []
+      some_v = (fmap (:) v) <*> many_v
+```
+
+Let's check out a demo (source [AltParsing.hs](./AltParsing.hs)):
+```haskell
+parseNos :: Parser NumberOrString
+parseNos =
+      (Left <$> integer)
+  <|> (Right <$> some letter)
+```
+So `<|>` is acting as a disjunction of the two parsers.
+The Alternative typeclass also includes `many` and `some`,
+which essentially mean "zero or more" and "one or more" respectively.
+
+[This](http://stackoverflow.com/questions/7671009/functions-from-alternative-type-class/7681283#7681283) is a great explanation of this typeclass.
+The `some` and `many` functions are not useful (and indeed barely make sense) in common types
+such as `[]` and `Maybe`.
+We need a type that has a sensible notion of *failure* context and a *retry*'s,
+which is why it makes so much sense when parsing (keep trying as we traverse the input).
+
+#### QuasiQuotes
+We can use the `QuasiQuotes` language pragma to write multiline strings without newline separators:
+```haskell
+{-# LANGUAGE QuasiQuotes #-}
+import Text.RawString.QQ
+
+eitherOr :: String
+eitherOr = [r|
+123
+abc
+456
+def
+|]
+```
+The `[r|` is beginning a quasiquoted section, using quasiquoter named `r :: QuasiQuoter`,
+defined in Text.RawString.QQ.
+
+#### Exercise: Try Try
+Fairly bombproof solution:
+```haskell
+-- Taken from TextFraction.hs
+parseFraction :: Parser Rational
+parseFraction = do
+  numerator <- decimal
+  char '/'
+  denominator <- decimal
+  eof
+  case denominator of
+    0 -> fail "Denominator cannot be zero"
+    _ -> return (numerator % denominator)
+
+-- Allows for .X or X. by assuming 0.X and X.0 respectively.
+parseDecimal :: Parser Rational
+parseDecimal = do
+  wholeNum   <- fromIntegral <$$> optional decimal
+  decimalNum <- fromIntegral <$$> optional (char '.' >> decimal)
+  eof
+  if and $ isNothing <$> [wholeNum, decimalNum]
+     then unexpected "decimal not found"
+     else return $ (fromMaybe 0 wholeNum) + (maybe 0 mkDec decimalNum)
+       where
+         mkDec x = if x < 1 then x else mkDec (x / 10)
+         (<$$>)  = fmap . fmap
+
+-- Note that parseFraction <|> parseDecimal alone will cause errors because
+-- parseFraction will start to consume "1.234" and then error on unexpected '.'
+parseRational :: Parser Rational
+parseRational = try parseFraction <|> parseDecimal
+```
+Some fixtures/examples are located in [TryTry.hs](./TryTry.hs).
+
+### 24.7 Parsing configuration files
+
