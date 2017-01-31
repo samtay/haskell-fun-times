@@ -19,9 +19,6 @@ newtype Header =
   Header String
   deriving (Eq, Ord, Show)
 
-headerEx :: ByteString
-headerEx = "[blah]"
-
 parseBracketPair :: Parser a -> Parser a
 parseBracketPair p = char '[' *> p <* char ']'
 
@@ -30,9 +27,6 @@ parseHeader =
   parseBracketPair (Header <$> some letter)
 
 -- Assignments
-
-assignmentEx :: ByteString
-assignmentEx = "foo=bar"
 
 type Name = String
 type Value = String
@@ -47,15 +41,6 @@ parseAssignment = do
   return (name, val)
 
 -- Comments
-
-commentEx :: ByteString
-commentEx =
-  "; todo: something\
-  \ wutwut"
-
-commentEx' :: ByteString
-commentEx' =
-  "; blah\n: woot\n  \n;haha"
 
 skipComments :: Parser ()
 skipComments = skipMany $ do
@@ -83,23 +68,6 @@ parseSection = do
   skipEOL
   assignments <- some parseAssignment
   return $ Section h (M.fromList assignments)
-
-sectionEx' :: ByteString
-sectionEx' = [r|
-; ignore me
-[states]
-Chris=Texas
-|]
-
-sectionEx'' :: ByteString
-sectionEx'' = [r|
-; comment
-[section]
-host=wikipedia.org
-alias=claw
-[whatisit]
-red=intoothandclaw
-|]
 
 -- Entire Config
 
@@ -181,6 +149,38 @@ main = hspec $ do
           r' = maybeSuccess m
       print m
       r' `shouldBe` Just firefoxMarshalledContent
+
+headerEx :: ByteString
+headerEx = "[blah]"
+
+sectionEx' :: ByteString
+sectionEx' = [r|
+; ignore me
+[states]
+Chris=Texas
+|]
+
+sectionEx'' :: ByteString
+sectionEx'' = [r|
+; comment
+[section]
+host=wikipedia.org
+alias=claw
+[whatisit]
+red=intoothandclaw
+|]
+
+assignmentEx :: ByteString
+assignmentEx = "foo=bar"
+
+commentEx :: ByteString
+commentEx =
+  "; todo: something\
+  \ wutwut"
+
+commentEx' :: ByteString
+commentEx' =
+  "; blah\n: woot\n  \n;haha"
 
 firefoxFileContent :: ByteString
 firefoxFileContent =
