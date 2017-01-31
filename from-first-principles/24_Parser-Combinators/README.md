@@ -312,4 +312,5 @@ parseRational = try parseFraction <|> parseDecimal
 Some fixtures/examples are located in [TryTry.hs](./TryTry.hs).
 
 ### 24.7 Parsing configuration files
-
+What a coinkydink. I was planning to do this for [conman](https://github.com/SamTay/conman).
+Great practical example in any case. A complete single-file program [Data.Ini](./DataIni.hs).
