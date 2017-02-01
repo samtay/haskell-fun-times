@@ -314,3 +314,201 @@ Some fixtures/examples are located in [TryTry.hs](./TryTry.hs).
 ### 24.7 Parsing configuration files
 What a coinkydink. I was planning to do this for [conman](https://github.com/SamTay/conman).
 Great practical example in any case. A complete single-file program [Data.Ini](./DataIni.hs).
+
+### 24.8 Character and token parsers
+Traditionally, parsing has been done in two stages, *lexing* and *parsing*.
+Characters from a stream feed into the lexer, which emits *tokens* to the parser.
+The parser then structures the stream of *tokens* into an **abstract syntax tree** (AST).
+
+Lexers are simpler and typically don't look ahead into the input stream by more than one character/token at a time.
+Sometimes they are also called tokenizers.
+Lexers are also sometimes done with regexes,
+but typically parsing libraries in Haskell intend for lexing and parsing to be done with the same API.
+
+Instead of handling all kinds of whitespace manually, we can leverage existing tokenizers.
+Notice the difference between CharParsing and TokenParsing:
+```haskell
+digit :: CharParsing m => m Char
+λ> parseString (some digit) mempty "123 456"
+Success "123"
+λ> parseString (some (some digit)) mempty "123 456"
+Success ["123"]
+
+integer :: TokenParsing m => m Integer
+λ> parseString (some integer) mempty "123 456"
+Success [123,456]
+λ> parseString (some integer) mempty "123 \n\n \n \n 456"
+Success [123,456]
+```
+
+We can turn `digit` into a token parser via `token :: TokenParsing m => m a -> m a`:
+```haskell
+λ> :t integer
+integer :: TokenParsing m => m Integer
+        :: Parser Integer -- specialized
+
+λ> :t read <$> (token . some) digit :: Parser Integer
+read <$> (token . some) digit :: Parser Integer
+```
+
+#### Tokenizing scope examples
+Here, `tknWhole` consumes as a single *token* the sequence `"ab"`.
+So it fails if it finds `'a'` followed by whitespace, but is fine if `"ab"` is followed by whitespace:
+```haskell
+Prelude> let tknWhole = token $ char 'a' >> char 'b'
+Prelude> parseString tknWhole mempty "a b"
+Failure (interactive):1:2: error: expected: "b"
+a b<EOF>
+^
+Prelude> parseString tknWhole mempty "ab ab"
+Success 'b'
+Prelude> parseString (some tknWhole) mempty "ab ab"
+Success "bb"
+```
+
+On the other hand, to make the parse successful for `"a b"`, we can tokenize the parsing of `'a'` and then parse `'b'`:
+```haskell
+Prelude> let tknCharA = (token (char 'a')) >> char 'b'
+Prelude> parseString tknCharA mempty "a b"
+Success 'b'
+Prelude> parseString (some tknCharA) mempty "a ba b"
+Success "bb"
+Prelude> parseString (some tknCharA) mempty "a b a b"
+Success "b"
+```
+The last example only parses the first pair because tokenization handles **trailing** whitespace, not leading whitespace.
+Therefore the second space character causes the rest of the parse to fail.
+This is readily verified by running:
+```haskell
+λ> parseString (some tknCharA) mempty " a b"
+Failure (ErrInfo {_errDoc = (interactive):1:1: error: expected: "a"
+ a b<EOF>
+^         , _errDeltas = [Columns 0 0]})
+```
+
+In general, Chris advises not to go crazy with tokenization.
+Overuse or messy mixture with character parsers can slow down parsers and make them less readable.
+Tokenization is *not* just about whitespace, but about generally igorning noise.
+
+### 24.9 Polymorphic parsers
+To avoid confusing error messages when backtracing (that is, when using `try`),
+we can as a rule of thumb combine this with the `<?>` operator to annotate parsing rules:
+```haskell
+tryAnnot :: (Monad f, CharParsing f) => f Char
+tryAnnot =
+      (try (char '1' >> char '2')
+      <?> "Tried 12 for the initial part")
+  <|> (char '3' <?> "Tried 3 as a fallback")
+```
+
+### 24.10 Marshalling from an AST to a datatype
+Typically a program has input / output in some form of "text".
+For this text to make sense and be useful for our program, we need a two-stage transformation:
+```haskell
+input :: Text -> Structure -> Meaning
+input = unmarshall . parse
+
+output :: Meaning -> Structure -> Text
+output = serialize . marshall
+```
+
+#### Marshalling and unmarshalling JSON data
+`aeson` is the canonical JSON library in Haskell.
+I already have experience using this in my own small projects, so my notes here will be brief.
+
+Types:
+```haskell
+sectionJson :: ByteString
+sectionJson = [r|
+{ "section": {"host": "wikipedia.org"},
+  "whatisit": {"red": "intoothandclaw"}
+}
+|]
+
+data TestData =
+  TestData {
+    section :: Host
+  , what :: Color
+  } deriving (Eq, Show)
+
+newtype Host =
+  Host String
+  deriving (Eq, Show)
+
+type Annotation = String
+
+data Color =
+    Red Annotation
+  | Blue Annotation
+  | Yellow Annotation
+  deriving (Eq, Show)
+```
+
+Aeson marshalling instances:
+```haskell
+instance FromJSON TestData where
+  parseJSON (Object v) =
+    TestData <$> v .: "section"
+             <*> v .: "whatisit"
+  parseJSON _ =
+    fail "Expected an object for TestData"
+
+instance FromJSON Host where
+  parseJSON (Object v) =
+    Host <$> v .: "host"
+  parseJSON _ =
+    fail "Expected an object for Host"
+
+instance FromJSON Color where
+  parseJSON (Object v) =
+        (Red <$> v .: "red")
+    <|> (Blue <$> v .: "blue")
+    <|> (Yellow <$> v .: "yellow")
+  parseJSON _ = fail "Expected an object for Color"
+```
+
+As of now, aeson defines its JSON AST as
+```haskell
+-- | A JSON value represented as a Haskell value.
+data Value = Object !Object
+           | Array !Array
+           | String !Text
+           | Number !Scientific
+           | Bool !Bool
+           | Null
+           deriving (Eq, Read, Show, Typeable, Data)
+```
+
+Here's an example of handling when a single field can be a string *or* a number:
+```haskell
+data NumberOrString =
+    Numba Integer
+  | Stringy Text
+  deriving (Eq, Show)
+
+instance FromJSON NumberOrString where
+  parseJSON (Number i) = return $ Numba i
+  parseJSON (String s) = return $ Stringy s
+  parseJSON _ =
+    fail "NumberOrString must be number or string"
+```
+Although, this doesn't work out of the box.
+JSON (and JavaScript - yikes) only has *one* numeric type (called IEEE-754 float), no integral types.
+To handle all possible JSON numbers,
+aeson uses the Scientific type which allows arbitrary precision.
+So to fully fix the above, we need to also convert Scientific to Integer:
+```haskell
+import Data.Scientific (floatingOrInteger)
+
+instance FromJSON NumberOrString where
+  parseJSON (Number i) =
+    case floatingOrInteger i of
+      (Left _) -> fail "Must be integral number"
+      (Right integer) -> return $ Numba integer
+  parseJSON (String s) = return $ Stringy s
+  parseJSON _ =
+    fail "NumberOrString must be number or string"
+```
+
+### 24.11 Chapter Exercises
+
