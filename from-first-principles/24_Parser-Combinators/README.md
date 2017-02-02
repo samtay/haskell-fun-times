@@ -511,4 +511,5 @@ instance FromJSON NumberOrString where
 ```
 
 ### 24.11 Chapter Exercises
-
+1. [Parse SemVer versions](./SemVer.hs)
+2. Write a [parser for positive integer values](./PosInt.hs)

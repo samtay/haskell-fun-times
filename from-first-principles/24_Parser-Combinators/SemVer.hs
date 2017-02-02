@@ -3,6 +3,7 @@
   --resolver lts-7
   --install-ghc
   --package hspec
+  --package trifecta
 -}
 module SemVer where
 
