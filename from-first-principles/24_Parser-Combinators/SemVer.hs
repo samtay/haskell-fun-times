@@ -52,7 +52,7 @@ somePerDot p = some $ p <* skipOptional (char '.')
 parseNOS :: Parser NumberOrString
 parseNOS =
       -- important to use decial (not integer) and not clobber trailing chars
-      NOSI <$> (try decimal <?> "number")
+      NOSI <$> (try $ decimal <* notFollowedBy alphaNumDash <?> "NOSI")
   <|> NOSS <$> (some alphaNumDash)
 
 alphaNumDash :: CharParsing m => m Char
