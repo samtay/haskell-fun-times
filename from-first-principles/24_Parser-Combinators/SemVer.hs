@@ -9,11 +9,14 @@ module SemVer where
 import Test.Hspec
 import Text.Trifecta
 import Control.Applicative ((<|>))
+import Data.List (sort)
+
+-- Types
 
 data NumberOrString =
-    NOSS String
-  | NOSI Integer
-  deriving (Eq, Show)
+    NOSI Integer
+  | NOSS String
+  deriving (Eq, Ord, Show)
 
 type Major = Integer
 type Minor = Integer
@@ -31,6 +34,8 @@ type Metadata = [NumberOrString]
 data SemVer =
   SemVer Major Minor Patch Release Metadata
   deriving (Eq, Show)
+
+-- Parsing funcs
 
 parseSemVer :: Parser SemVer
 parseSemVer = do
@@ -62,12 +67,28 @@ alphaNumDash = oneOf $
   ++ ['0'..'9']
   ++ ['-','_']
 
+-- Sorting
+
+instance Ord SemVer where
+  (SemVer majX minX patX relX _) <= (SemVer majY minY patY relY _)
+    = and [majX <= majY, minX <= minY, patX <= patY]
+      && ( ((not . null) relX && null relY)
+        || (and (zipWith (<=) relX relY) && (length relX <= length relY)) )
+
+
+-- Testing
+
 toMaybe :: Result a -> Maybe a
 toMaybe (Success x) = Just x
 toMaybe _           = Nothing
 
 testParse :: String -> Maybe SemVer
 testParse = toMaybe . parseString parseSemVer mempty
+
+sortFromString :: [String] -> Maybe [SemVer]
+sortFromString vs = sort <$> traverse testParse vs
+
+-- Runtime
 
 main :: IO ()
 main = hspec $ do
@@ -95,4 +116,14 @@ main = hspec $ do
           `shouldBe` Just (SemVer 1 0 0 [NOSS "beta"] [NOSS "exp", NOSS "sha", NOSS "5114f85"])
 
   describe "SemVer Sorting" $
-    it "sorts semvars correctly" $ pendingWith "make some damn tests"
+    it "sorts semvars correctly" $
+      sortFromString
+        [ "1.0.0-rc.1", "1.0.0-beta.2", "1.0.0-beta", "1.0.0-beta.11"
+        , "1.0.0-alpha.1", "1.0.0-alpha", "1.0.0-alpha.beta"]
+          `shouldBe` Just [ SemVer 1 0 0 [NOSS "alpha"] []
+                          , SemVer 1 0 0 [NOSS "alpha", NOSI 1] []
+                          , SemVer 1 0 0 [NOSS "alpha", NOSS "beta"] []
+                          , SemVer 1 0 0 [NOSS "beta"] []
+                          , SemVer 1 0 0 [NOSS "beta", NOSI 2] []
+                          , SemVer 1 0 0 [NOSS "beta", NOSI 11] []
+                          , SemVer 1 0 0 [NOSS "rc", NOSI 1] [] ]
