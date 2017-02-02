@@ -5,13 +5,15 @@
   --package hspec
   --package trifecta
 -}
-module PosInt where
+module Integer where
 
 import Test.Hspec
 import Text.Trifecta
 import Control.Applicative ((<|>))
+import Data.Maybe (isJust)
 
 {-
+-- 2 --
 Write a parser for positive integer values. Don’t reuse the pre-
 existing digit or integer functions, but you can use the rest of
 the libraries we’ve shown you so far. You are not expected to
@@ -23,10 +25,25 @@ write a parsing library from scratch.
 parseDigit :: Parser Char
 parseDigit = oneOf ['0'..'9']
 
-base10Integer :: Parser Integer
-base10Integer = do
+base10PosInt :: Parser Integer
+base10PosInt = do
   ds <- some parseDigit
   return $ read ds
+
+{-
+-- 3 --
+Extend the parser you wrote to handle negative and positive
+integers. Try writing a new parser in terms of the one you
+already have to do this.
+-}
+
+base10Integer :: Parser Integer
+base10Integer = do
+  isNegative  <- isJust <$> optional (char '-')
+  absoluteInt <- base10PosInt
+  return $ if isNegative
+              then negate absoluteInt
+              else absoluteInt
 
 -- Testing
 
@@ -52,6 +69,15 @@ main = hspec $ do
       parseDigit `testWith` "abc"
         `shouldBe` Nothing
 
+  describe "Parsing base 10 posints" $ do
+    it "parses 123abc" $
+      base10PosInt `testWith` "123abc"
+        `shouldBe` Just 123
+
+    it "fails abc" $
+      base10PosInt `testWith` "abc"
+        `shouldBe` Nothing
+
   describe "Parsing base 10 integers" $ do
     it "parses 123abc" $
       base10Integer `testWith` "123abc"
@@ -60,3 +86,7 @@ main = hspec $ do
     it "fails abc" $
       base10Integer `testWith` "abc"
         `shouldBe` Nothing
+
+    it "negates -123abc properly" $
+      base10Integer `testWith` "-123abc"
+        `shouldBe` Just (-123)

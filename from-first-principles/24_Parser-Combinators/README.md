@@ -512,4 +512,6 @@ instance FromJSON NumberOrString where
 
 ### 24.11 Chapter Exercises
 1. [Parse SemVer versions](./SemVer.hs)
-2. Write a [parser for positive integer values](./PosInt.hs)
+2. Write a [parser for positive integer values](./Integer.hs)
+3. Extend posint [parser to negatives](./Integer.hs) as well.
+4. Parser for US/Canada [phone numbers](./Phone.hs).
