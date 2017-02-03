@@ -1,8 +1,20 @@
-module Data.Log where
+module Data.Log
+  (
+    -- * Types
+    Activity, LogS, LogE, LogEntryE(..), LogEntryS(..)
+    -- * Log actions
+  , startToElapsed
+    -- * Parsers
+  , parseLog
+  , parseLogEntry
+  ) where
 
 import Text.Trifecta
-import Control.Applicative ((<|>))
+import Text.Parser.LookAhead (lookAhead)
 import Data.Time
+import Control.Applicative ((<|>))
+import Control.Monad (void)
+import Data.List (sort)
 
 {-
 -- 5 --
@@ -22,21 +34,33 @@ type LogS = [LogEntryS]
 type LogE = [LogEntryE]
 
 -- | Log entry consists of start time + activity
-data LogEntryS =
-  LogEntryS UTCTime Activity
-  deriving (Eq, Ord, Show)
+data LogEntryS = LogEntryS
+  { lsTime :: UTCTime
+  , lsAct  :: Activity
+  } deriving (Eq, Ord, Show)
 
 -- | Log entry consists of elapsed time + activity
-data LogEntryE =
-  LogEntryE DiffTime Activity
-  deriving (Eq, Ord, Show)
+data LogEntryE = LogEntryE
+  { leTime :: DiffTime
+  , leAct  :: Activity
+  } deriving (Eq, Ord, Show)
 
 -- | Convert a log with start times to a log with elapsed times
 --
 -- This is a uni-directional conversion, using diffs between start times.
 -- Last log entry will have 0 elapsed time
 startToElapsed :: LogS -> LogE
-startToElapsed = undefined
+startToElapsed = startToElapsed' . sort
+
+-- | Internal func, assumes LogS already sorted
+startToElapsed' :: LogS -> LogE
+startToElapsed' []    = []
+startToElapsed' ([l]) = [LogEntryE 0 (lsAct l)]
+startToElapsed' ls    = zipWith go ls $ (Just <$> tail ls) ++ [Nothing]
+  where go (LogEntryS _ act) Nothing                   = LogEntryE 0 act
+        go (LogEntryS tx actx) (Just (LogEntryS ty _)) =
+          LogEntryE (toDT $ diffUTCTime ty tx) actx
+        toDT = fromRational . toRational
 
 -- | Get list of activities & average time spent per day
 --
@@ -52,13 +76,8 @@ parseLog = do
   skipComments
   entries <- some $ do
     string "# "
-    d  <- parseDay
-    skipComments
-    ls <- some $ do
-      l <- parseLogEntry
-      skipComments
-      return l
-    skipComments
+    d  <- parseDay <* skipComments
+    ls <- some $ parseLogEntry <* skipComments
     return $ map (\(t, a) -> LogEntryS (UTCTime d t) a) ls
   return $ concat entries
 
@@ -66,8 +85,11 @@ parseLogEntry :: Parser (DiffTime, Activity)
 parseLogEntry = do
   t <- parseDTime
   char ' '
-  a <- some (notChar '\n')
-  newline
+  a <- manyTill (notChar '\n') $             -- grab activity
+    lookAhead $                              -- stop for
+          void newline                       -- - newlines
+      <|> void (string "--")                 -- - comments
+      <|> void (try $ spaces >> string "--") -- - whitespace >> comments
   return (t, a)
 
 parseDTime :: Parser DiffTime
@@ -99,5 +121,4 @@ parseComment :: Parser ()
 parseComment = do
   string "--"
   skipMany (notChar '\n')
-  newline
-  return ()
+  void newline
