@@ -4,15 +4,18 @@ module Data.Log
     Activity, LogS, LogE, LogEntryE(..), LogEntryS(..)
     -- * Log actions
   , startToElapsed
+  , avgPerActivity
+  , totalPerActivity
     -- * Parsers
   , parseLog
   , parseLogEntry
   ) where
 
 import Text.Trifecta
-import Text.Parser.LookAhead (lookAhead)
 import Data.Time
-import Control.Applicative ((<|>))
+import qualified Data.HashMap.Lazy as M
+import Text.Parser.LookAhead (lookAhead)
+import Control.Applicative ((<|>), liftA2)
 import Control.Monad (void)
 import Data.List (sort)
 
@@ -62,12 +65,20 @@ startToElapsed' ls    = zipWith go ls $ (Just <$> tail ls) ++ [Nothing]
           LogEntryE (toDT $ diffUTCTime ty tx) actx
         toDT = fromRational . toRational
 
--- | Get list of activities & average time spent per day
---
--- If log spans 5 days, and Rocket League was played 5 hours the first day,
--- and 10 hours the last day, it would have an entry with average 3 hours.
-avgPerActivity :: LogE -> [(Activity, DiffTime)]
-avgPerActivity = undefined
+-- | Get list of activities & average time spent per activity per day
+avgPerActivity :: LogS -> [(Activity, DiffTime)]
+avgPerActivity ls = (/ daySpan ls) <$$> (totalPerActivity . startToElapsed) ls
+
+-- | Get list of activities & total time spent per activity
+totalPerActivity :: LogE -> [(Activity, DiffTime)]
+totalPerActivity = M.toList . foldr go M.empty
+  where go (LogEntryE t a) = M.insertWith (+) a t
+
+daySpan :: Num a => LogS -> a
+daySpan [] = 0
+daySpan [_] = 1
+daySpan ls = let [a, b] = utctDay . lsTime . ($ ls) <$> [head, last]
+              in fromInteger $ 1 + abs (diffDays a b)
 
 -- Parsers
 
@@ -122,3 +133,8 @@ parseComment = do
   string "--"
   skipMany (notChar '\n')
   void newline
+
+infixl 4 <$$>
+
+(<$$>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+(<$$>) = fmap . fmap
