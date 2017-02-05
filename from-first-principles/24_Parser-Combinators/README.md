@@ -12,7 +12,7 @@ and returns a new parser as output.
 (Recall combinators from the lambda calculus: *combinators* are expressions with no free variables.)
 Usually the argument passing is elided,
 as the interface for parsers will often be like the State monad, with implicit argument passing.
-Combinators allow for parsing data according to complex ruels by gluing together parsers in a modular fashion.
+Combinators allow for parsing data according to complex rules by gluing together parsers in a modular fashion.
 
 #### The parsing process
 The basic idea behind a parser is that you're moving a cursor around a linear stream of text,
