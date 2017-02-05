@@ -516,3 +516,4 @@ instance FromJSON NumberOrString where
 3. Extend posint [parser to negatives](./Integer.hs) as well.
 4. Parser for US/Canada [phone numbers](./Phone.hs).
 5. Write a [parser for log file format](./logfile/src/Data/Log.hs).
+6. Write a [parser for IPv4 addresses](./IPv4.hs).
