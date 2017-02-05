@@ -1,3 +1,12 @@
+#!/usr/bin/env stack
+{- stack runghc
+  --resolver lts-7
+  --install-ghc
+  --package trifecta
+  --package raw-strings-qq
+  --package hspec
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 module Data.Ini where
@@ -19,12 +28,9 @@ newtype Header =
   Header String
   deriving (Eq, Ord, Show)
 
-parseBracketPair :: Parser a -> Parser a
-parseBracketPair p = char '[' *> p <* char ']'
-
 parseHeader :: Parser Header
 parseHeader =
-  parseBracketPair (Header <$> some letter)
+  between (symbol "[") (symbol "]") (Header <$> some letter)
 
 -- Assignments
 
@@ -48,11 +54,8 @@ skipComments = skipMany $ do
   skipMany (noneOf "\n")
   skipEOL
 
-skipWhitespace :: Parser ()
-skipWhitespace = skipMany (char ' ' <|> char '\n')
-
 skipEOL :: Parser ()
-skipEOL = skipMany (oneOf "\n")
+skipEOL = skipMany newline
 
 -- Sections
 
@@ -62,7 +65,7 @@ data Section =
 
 parseSection :: Parser Section
 parseSection = do
-  skipWhitespace
+  spaces
   skipComments
   h <- parseHeader
   skipEOL
