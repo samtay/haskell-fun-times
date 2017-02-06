@@ -2,8 +2,9 @@
 {- stack runghc
   --resolver lts-7
   --install-ghc
-  --package hspec
   --package trifecta
+  --package hspec
+  --package QuickCheck
 -}
 module IPv4 where
 
@@ -12,6 +13,7 @@ import Data.Word
 import Control.Applicative ((<|>))
 import Control.Monad (when)
 import Test.Hspec
+import Test.QuickCheck hiding (Result, Success, Failure)
 
 {-
 -- 6 --
@@ -38,7 +40,18 @@ Example IPv4 addresses and their decimal representations:
 
 data IPAddress =
   IPAddress Word32
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
+
+instance Show IPAddress where
+  show (IPAddress x) = fn (fromIntegral x) 3
+    where
+      fn :: Integer -> Integer -> String
+      fn x n
+        | n < 0 = ""
+        | otherwise = let o = floor $ (fromIntegral x) / 256 ^ n
+                          m = mod x (256 ^ n)
+                          s = if n > 0 then "." else ""
+                       in (show o) ++ s ++ fn m (n - 1)
 
 -- Parsing funcs
 
@@ -63,22 +76,43 @@ toMaybe :: Result a -> Maybe a
 toMaybe (Success x) = Just x
 toMaybe _           = Nothing
 
-testIP :: String -> IPAddress -> Spec
-testIP s ip = it ("parses " ++ s) $ do
+testParseIP :: String -> IPAddress -> Spec
+testParseIP s ip = it ("parses " ++ s) $ do
   let res = parseString parseIPAddress mempty s
   case res of
     (Success _)    -> return ()
     (Failure info) -> print info
   toMaybe res `shouldBe` Just ip
 
+testShowIP :: String -> IPAddress -> Spec
+testShowIP s ip = it ("shows " ++ s) $
+  show ip `shouldBe` s
+
+testData :: [(String, IPAddress)]
+testData = [ ("192.168.1.16", IPAddress 3232235792)
+           , ("23.125.48.166", IPAddress 394080422)
+           , ("23.125.48.166", IPAddress 394080422)
+           , ("172.16.0.16", IPAddress 2886729744)
+           ]
+
+prop_isomoriphism :: IPAddress -> Bool
+prop_isomoriphism ip = case parseString parseIPAddress mempty (show ip) of
+                         Failure _   -> False
+                         Success ip' -> ip == ip'
+
+instance Arbitrary IPAddress where
+  arbitrary = IPAddress <$> arbitrary
+
 -- Runtime
 
 main :: IO ()
-main = hspec $
+main = do
+  putStrLn "Checking isomorphism from string to datatype"
+  quickCheck prop_isomoriphism
+
+  hspec $ do
   describe "Parsing IP Addresses" $
-    mapM_ (uncurry testIP) $
-      [ ("192.168.1.16", IPAddress 3232235792)
-      , ("23.125.48.166", IPAddress 394080422)
-      , ("23.125.48.166", IPAddress 394080422)
-      , ("172.16.0.16", IPAddress 2886729744)
-      ]
+    mapM_ (uncurry testParseIP) testData
+
+  describe "Showing IP Addresses" $
+    mapM_ (uncurry testShowIP) testData
