@@ -12,6 +12,7 @@ import Text.Trifecta
 import Control.Applicative ((<|>))
 import Test.Hspec
 import Data.Text (Text)
+import qualified Data.Text as T
 
 {-
 -- 10 --
@@ -20,6 +21,14 @@ express graphs in plain-text.
 We suggest you look at the AST datatype in Haphviz for ideas
 on how to represent the graph in a Haskell datatype. If you’re
 feeling especially robust, you can try using fgl.
+--
+I'm greatly simplifying here so I don't end up spending a ton of time on this.
+--
+In hindsight, my parsers will probably need (or at least, be made much simpler by)
+statement types & parsers that are then used to create the datatype.
+(See language-dot for examples).
+For example, parse DOT into statement types,
+then use statement types to compile a graph type
 -}
 
 -- Parsing funcs
@@ -35,48 +44,36 @@ parseGType =
   <|> (string "digraph" >> return DirectedGraph)
 
 parseDot :: Parser Dot
-parseDot = foldr ((<|>) . try) (try parseNode)
-  [ parseEdge
-  , parseDeclaration
-  , parseRanksame
-  , parseSubgraph
-  , parseRawDot
-  , parseLabel
-  , parseRankdir
-  , parseDotSeq
-  , parseDotEmpty ]
+parseDot =
+      try parseNode
+  <|> try parseEdge
+  <|> try parseDotSeq
+  <|> parseDotEmpty
 
 parseNode :: Parser Dot
-parseNode = undefined
+parseNode =
+  Node <$> (NodeId . T.pack <$> some (noneOf " \n\t"))
+       <*> (option [] $ char ' ' >> parseAttributes)
+
+parseAttributes :: Parser [Attribute]
+parseAttributes = between (symbol "[") (symbol "]") $
+  parseAttribute `sepBy` symbol ","
+
+parseAttribute :: Parser Attribute
+parseAttribute = do
+  n <- some alphaNum
+  _ <- char '='
+  v <- some alphaNum
+  return (T.pack n, T.pack v)
 
 parseEdge :: Parser Dot
 parseEdge = undefined
-
-parseDeclaration :: Parser Dot
-parseDeclaration = undefined
-
-parseRanksame :: Parser Dot
-parseRanksame = undefined
-
-parseSubgraph :: Parser Dot
-parseSubgraph = undefined
-
-parseRawDot :: Parser Dot
-parseRawDot = undefined
-
-parseLabel :: Parser Dot
-parseLabel = undefined
-
-parseRankdir :: Parser Dot
-parseRankdir = undefined
 
 parseDotSeq :: Parser Dot
 parseDotSeq = undefined
 
 parseDotEmpty :: Parser Dot
 parseDotEmpty = undefined
-
--- Types - mostly stolen from Haphiz, but simplified a bit
 
 -- | Type of a graph, directed or undirected.
 --
@@ -98,46 +95,19 @@ type Attribute = (AttributeName, AttributeValue)
 -- | A node identifier.
 --
 -- This is either a user supplied name or a generated numerical identifier.
-data NodeId =
-    UserId Text
-  | Nameless Int
-  deriving (Show, Eq)
-
--- | Declaration type
---
--- Used to declare common attributes for nodes or edges.
-data DecType =
-    DecGraph
-  | DecNode
-  | DecEdge
-  deriving (Show, Eq)
-
--- | A Haphviz Graph
-data DotGraph = Graph GraphType Dot
-  deriving (Show, Eq)
-
--- | Rankdir Type
---
--- Used to specify the default node layout direction
-data RankdirType =
-    LR
-  | RL
-  | TB
-  | BT
+data NodeId = NodeId Text
   deriving (Show, Eq)
 
 -- | Haphviz internal graph content AST
 data Dot =
     Node NodeId [Attribute]
   | Edge NodeId NodeId [Attribute]
-  | Declaration DecType [Attribute]
-  | Ranksame Dot
-  | Subgraph Text Dot
-  | RawDot Text
-  | Label Text
-  | Rankdir RankdirType
   | DotSeq Dot Dot
   | DotEmpty
+  deriving (Show, Eq)
+
+-- | A Haphviz Graph
+data DotGraph = Graph GraphType Dot
   deriving (Show, Eq)
 
 -- | Dot is a monoid, duh, that's the point.
