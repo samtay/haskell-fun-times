@@ -517,3 +517,5 @@ instance FromJSON NumberOrString where
 4. Parser for US/Canada [phone numbers](./Phone.hs).
 5. Write a [parser for log file format](./logfile/src/Data/Log.hs).
 6. Write a [parser for IPv4 addresses](./IPv4.hs).
+7. (Skipping IPv6 addresses for now)
+10. Write a [parser](./Dot.hs) for the [DOT language](http://www.graphviz.org/doc/info/lang.html) that Graphviz uses to express graphs in plain-text - WIP.
