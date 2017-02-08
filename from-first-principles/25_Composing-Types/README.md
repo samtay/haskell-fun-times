@@ -44,3 +44,87 @@ value = Compose [Just 1, Nothing]
 ```
 
 ### 25.3 Two little functors sittin’ in a tree, L-I-F-T-I-N-G
+Consider this composition of functors:
+```haskell
+instance (Functor f, Functor g) =>
+         Functor (Compose f g) where
+  fmap f (Compose fga) =
+    Compose $ (fmap . fmap) f fga
+```
+Also note that we can nest to arbitrary levels, just using `Compose`:
+```haskell
+v :: Compose [] Maybe (Compose Maybe [] Integer)
+v = Compose [Just (Compose $ Just [1])]
+```
+The functor instance can evidently generalize to further nested levels,
+implemented by further composing `fmap`.
+Therefore, functors are closed under composition.
+
+### 25.4 Twinplicative
+As mentioned earlier, applicatives are also closed under composition, and it is up to me to prove it!
+
+#### Exercise time
+```haskell
+{-# LANGUAGE InstanceSigs #-}
+instance (Applicative f, Applicative g) =>
+  Applicative (Compose f g) where
+
+    pure :: a -> Compose f g a
+    pure = Compose . pure . pure
+
+    (<*>) :: Compose f g (a -> b)
+          -> Compose f g a
+          -> Compose f g b
+    (Compose fgab) <*> (Compose fga) = Compose $ liftA2 (<*>) fgab fga
+```
+This is another benefit that applicative has over monad,
+even though applicative is the "weaker" of the two algebras.
+
+### 25.5 Twonad?
+Although we can compose two monads, such as `Compose $ [Just 1] :: Compose [] Maybe Int`,
+the result is **not** a monad.
+The problem arises from a lack of information.
+When we try to write a single `bind` out of two polymorphic `bind`s, we run into trouble:
+```haskell
+{-# LANGUAGE InstanceSigs #-}
+
+-- IMPOSSIBLE
+instance (Monad f, Monad g) => Monad (Compose f g) where
+  return = pure
+
+  (>>=) :: Compose f g a
+        -> (a -> Compose f g b)
+        -> Compose f g b
+  (Compose fga) >>= aCfgb = -- ???
+
+-- We have two available binds
+b1 :: Monad f => f a -> (a -> f b) -> f b
+b2 :: Monad g => g a -> (a -> g b) -> g b
+
+-- and joins
+j1 :: Monad f => f (f a) -> f a
+j2 :: Monad g => g (g a) -> g a
+
+-- And we need to make a bind
+b3 :: (Monad f, Monad g) => f (g a) -> (a -> f (g b)) -> f (g b)
+
+-- or a join
+j3 :: (Monad f, Monad g) => f (g (f (g a))) -> f (g a)
+
+-- It's easier to think about joins, since they are conceptually simpler.
+-- Following the technique for fmap and pure, we can try composition:
+j = j2 . j1 -- DOES NOT TYPE CHECK
+-- but we quickly find this doesn't work, because j1 needs a nest of the **same** monad
+```
+So, we can't get a monad from composing two monads out of the box - we will need some additional
+construct linking them together.
+This is where *monad transformers* come into play.
+See [Composing Monads](http://web.cecs.pdx.edu/~mpj/pubs/RR-1004.pdf) for more information.
+
+### 25.6 Exercises: Compose Instances
+#### Compose Foldable
+```haskell
+instance (Foldable f, Foldable g) =>
+  Foldable (Compose f g) where
+    foldMap
+```
