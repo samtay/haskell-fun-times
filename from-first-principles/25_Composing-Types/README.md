@@ -172,3 +172,108 @@ and get concrete information about one of the Monads we're working with.
 The types are the trickiest part in all of this.
 
 #### Monadic stacking
+Applicative allows us to apply functions of more than one argument within functorial structure:
+```haskell
+-- from functor
+fmap (+1) (Just 1)
+
+-- to applicative
+(,,) <$> Just 1 <*> Just "lol" <*> Just [1, 2]
+```
+
+In a similar way, sometimes we want a `>>=` which can address more than one monad at once,
+such as a web app combining Reader and IO.
+We might want to perform effectul actions via IO and pass around a database connection
+via Reader, and might even want more Reader instances to hold HTTP request context, etc.
+So, **how do we get one big bind** over a type such as `IO (Reader String [a])`
+that can leverage monadic contexts of IO, Reader, and []?
+
+#### Doing it badly
+The first naive solution is to make one-off types for each combination:
+```haskell
+newtype MaybeIO a =
+  MaybeIO { runMaybeIO :: IO (Maybe a) }
+```
+but this is obviously not the best solution.
+We can instead get a monad for *two* types,
+as long as we know what *one* of them is.
+Transformers are a way of avoiding making these "one-off" monads for every possible combination.
+
+### 25.8 IdentityT
+Just as the `Identity` type has shown us the basic essence of Functor, Applicative, and Monad,
+`IdentityT` will give us a introduction to the fundamentals of monad transformers.
+
+```haskell
+-- Plain old Identity. 'a' can be something with
+-- more structure, but it's not required and
+-- Identity won't know anything about it.
+newtype Identity a =
+  Identity { runIdentity :: a }
+  deriving (Eq, Show)
+
+-- The identity monad transformer, serving only to
+-- to specify that additional structure should exist.
+newtype IdentityT f a =
+  IdentityT { runIdentityT :: f a }
+  deriving (Eq, Show)
+
+-- Functor instances
+instance Functor Identity where
+  fmap f (Identity a) = Identity (f a)
+
+instance (Functor m) => Functor (IdentityT m) where
+  fmap f (IdentityT fa) = IdentityT (fmap f fa)
+
+-- Applicative instances
+instance Applicative Identity where
+  pure = Identity
+  (Identity f) <*> (Identity a) = Identity (f a)
+
+instance (Applicative m) => Applicative (IdentityT m) where
+  pure x = IdentityT (pure x)
+  (IdentityT fab) <*> (IdentityT fa) =
+    IdentityT (fab <*> fa)
+
+-- Finally, Monad instances
+-- Remember, functor & applicative can be composed generally, for all instances
+-- Monad is where our instances will need particulars to make the types fit
+instance Monad Identity where
+  return = pure
+  (Identity a) >>= f = f a
+
+instance Monad m => Monad (IdentityT m) where
+  return = pure
+  (IdentityT ma) >>= f =
+    IdentityT $ ma >>= runIdentityT . f
+--  IdentityT $ join (runIdentityT . f <$> ma)
+--  IdentityT $ join (runIdentityT <$> (f <$> ma))
+```
+
+This shows a **great insight**:
+look at the *one* spot where we needed particular IdentityT info:
+`ma >>= runIdentityT . f`.
+To use the abstract monad `m`'s bind, of type `m a -> (a -> m b) -> m b`,
+we need to make a function with type
+`runIdentityT . f :: a -> m a`
+as opposed to `f :: a -> IdentityT m a` alone.
+**If** we left that `f` alone,
+this would end up trying to join `m (IdentityT m b)`, which doesn't work,
+and is the **same problem** we discovered above when trying to compose
+monads in the abstract.
+
+### 25.9 Finding a pattern
+Transformers give us a `>>=` operation over two monad instances.
+As should be clear now, if we write some monad `m`,
+we need to create an accompanying transformer to allow it to stack with any other monads,
+and that transformer monad instance will handle dealing with the extra structure generated.
+"Dealing with" that extra structure is going to look like *folding*.
+In general, this folding will be similar but probably more complicated than the IdentityT case,
+which just used the record accessor `runIdentityT` to fold away the structure.
+
+The *very* general (not a hard and fast rule at all) pattern of type play looks like this:
+```haskell
+goingFrom :: m (n m b)
+          -> m (m b)
+          -> m b
+          -> n m b
+```
