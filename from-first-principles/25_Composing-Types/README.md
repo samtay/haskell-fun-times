@@ -130,6 +130,7 @@ instance (Foldable f, Foldable g) =>
   Foldable (Compose f g) where
     foldMap f (Compose fga) = (foldMap . foldMap) f fga
 ```
+
 #### Compose Traversable
 ```haskell
 -- 2 Traversable
@@ -144,3 +145,30 @@ instance (Traversable f, Traversable g) =>
 -- traverse . traverse :: (Traversable t, Traversable s, Applicative f)
 --                     => (a -> f b) -> s (t a) -> f (s (t b))
 ```
+
+#### And now for something completely different
+Implement Bifunctor instances for the given types, where
+```haskell
+class Bifunctor p where
+  {-# MINIMAL bimap | first, second #-}
+
+  bimap :: (a -> b) -> (c -> d) -> p a c -> p b d
+  bimap f g = first f . second g
+
+  first :: (a -> b) -> p a c -> p b c
+  first f = bimap f id
+
+  second :: (b -> c) -> p a b -> p a c
+  second = bimap id
+```
+Solutions are [here](./Bifunctor.hs).
+
+### 25.7 Monad transformers
+A monad transformer is a type constructor that takes a Monad as an argument and returns another Monad.
+
+In order to compose monads,
+we need to reduce the polymorphism (or, generality)
+and get concrete information about one of the Monads we're working with.
+The types are the trickiest part in all of this.
+
+#### Monadic stacking
