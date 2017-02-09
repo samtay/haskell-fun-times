@@ -124,7 +124,23 @@ See [Composing Monads](http://web.cecs.pdx.edu/~mpj/pubs/RR-1004.pdf) for more i
 ### 25.6 Exercises: Compose Instances
 #### Compose Foldable
 ```haskell
+-- 1 Foldable
+
 instance (Foldable f, Foldable g) =>
   Foldable (Compose f g) where
-    foldMap
+    foldMap f (Compose fga) = (foldMap . foldMap) f fga
+```
+#### Compose Traversable
+```haskell
+-- 2 Traversable
+
+instance (Traversable f, Traversable g) =>
+  Traversable (Compose f g) where
+    traverse f (Compose fga) =
+      Compose
+        <$> (traverse . traverse) f fga
+
+-- where
+-- traverse . traverse :: (Traversable t, Traversable s, Applicative f)
+--                     => (a -> f b) -> s (t a) -> f (s (t b))
 ```
