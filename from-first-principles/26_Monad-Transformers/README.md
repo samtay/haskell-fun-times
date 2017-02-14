@@ -137,3 +137,66 @@ instance (Monad m) => Monad (ReaderT r m) where
     a <- ma r
     runReaderT (f a) r
 ```
+
+### 26.5 StateT
+StateT is State with additional monadic structure around the function result, just like Reader and ReaderT.
+```haskell
+newtype StateT s m a =
+  StateT { runStateT :: s -> m (a, s) }
+```
+
+#### Exercises: StateT
+We're implementing the strict variant (as opposed to lazy), which is the "obvious" implementation:
+```haskell
+instance (Functor m) =>
+  Functor (StateT s m) where
+    fmap f (StateT smf) = StateT $ \s ->
+      fmap (\(x, s1) -> (f x, s1)) (smf s)
+
+instance (Monad m) =>
+  Applicative (StateT s m) where
+    pure x = StateT $ \s -> pure (x, s)
+
+    (<*>) :: StateT s m (a -> b)
+          -> StateT s m a
+          -> StateT s m b
+    (StateT smf) <*> (StateT sma) = StateT $ \s1 -> do
+      (ab, s2) <- smf s1
+      (a, s3)  <- sma s2
+      return (ab a, s3)
+
+instance (Monad m) => Monad (StateT s m) where
+  return = pure
+
+  (>>=) :: StateT s m a
+        -> (a -> StateT s m b)
+        -> StateT s m b
+  (StateT sma) >>= f = StateT $ \s1 -> do
+    (a, s2) <- sma s1
+    (runStateT (f a)) s2
+```
+Notice we need a monadic constraint for the applicative instance;
+this is needed to feed the successive states through each computation,
+as opposed to just feeding the initial state through each computation.
+
+### 26.6 Types you probably don't want to use
+Not every type will necessarily be performant or make sense, such as ListT and Writer/WriterT.
+
+#### Why not use Writer or WriterT?
+First of all, State can do what Writer can do plus more.
+In addition, it is commonly too lazy or too strict for a given problem,
+which results in too much memory usage.
+Writer can accumulate unevaluated thunks, causing memory leaks.
+For example, it is inappropriate for logging in long-running processes,
+since the logged values can't be retrieved until the computation is complete.
+
+#### The ListT you want isn't made from the List type
+The obvious implementation of ListT is generally not recommended because:
+1. The obvious obvious attempt isn't associative.
+2. It's not very fast.
+3. Streaming libraries like [pipes](http://hackage.haskell.org/package/pipes) and [conduit](http://hackage.haskell.org/package/conduit) do it better for most cases.
+
+Lists in Haskell are as much a control structure as they are a data structure,
+so streaming libraries generally suffice when we need transformers.
+
+### 26.7 Recovering an ordinary type from a transformer
