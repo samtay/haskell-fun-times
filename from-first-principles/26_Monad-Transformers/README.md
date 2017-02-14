@@ -200,3 +200,145 @@ Lists in Haskell are as much a control structure as they are a data structure,
 so streaming libraries generally suffice when we need transformers.
 
 ### 26.7 Recovering an ordinary type from a transformer
+We can use the `Identity` type to recover non-transformer versions of transformer variants:
+```haskell
+type MyIdentity a = IdentityT Identity a
+type Maybe a      = MaybeT Identity a
+type Either e a   = EitherT e Identity a
+type Reader r a   = ReaderT e Identity a
+type State s a    = StateT s Identity a
+```
+We don't ordinarily need to do this for transformers that already have corresponding non-transformer types.
+However, `ReaderT` is part of the Scotty environment and you can't easily retrieve the `Reader` type out of it
+because `Reader` is not a type that exists on its own.
+Thus, it may present a situation where we only need `Reader`, not `ReaderT`,
+and `ReaderT Identity` can act as a `Reader` compatible with Scotty.
+
+#### The transformers library
+In general, we don't need to make these transformer types ourselves -
+many of them are in base or the `transformers` library.
+
+#### A note on ExceptT
+Note that the `either` library on Hackage provides an `EitherT` type,
+however most Haskellers are moving to the identical `ExceptT` type in the `transformers` library.
+This is mainly because `transformers` comes packaged with GHC already.
+
+### 26.8 Lexically inner is structurally outer
+One tricky part about monad transformers:
+the **lexical representation** of the types are *counterintuitive*
+with respect to the **structure of their values**.
+Consider the definitions of these transfomer types:
+```haskell
+newtype ExceptT e m a =
+  ExceptT { runExceptT :: m (Either e a)) }
+newtype MaybeT m a =
+  MaybeT { runMaybeT :: m (Maybe a) }
+newtype ReaderT r m a =
+  ReaderT { runReaderT :: r -> m a }
+```
+Note that the additional structure `m` is always wrapped *around* the value.
+It's only wrapped around things we can **have**, not things we **need**,
+as can be seen in `ReaderT`.
+Consequentially, a series of monad transformers will begin with the innermost type:
+```haskell
+import Control.Monad.Trans.Except
+import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Reader
+
+-- We only need to use return once because it's one big Monad
+embedded :: MaybeT (ExceptT String (ReaderT () IO)) Int
+embedded = return 1
+
+unwrap :: () -> IO (Either String (Maybe Int))
+unwrap = (runReaderT . runExceptT . runMaybeT) embedded
+
+λ> unwrap ()
+Right (Just 1)
+```
+See how the structure of the values (`Right (Just x))`) is the reverse of the type compositions
+(`MaybeT (ExceptT x y)`).
+When we say **base monad** we mean the structurally outermost monad.
+In the example above the base monad of `embedded` is Reader,
+and the base monad of `unwrap ()` is Either.
+
+### 26.9 MonadTrans
+We often want to lift functions into a larger context:
+```haskell
+fmap :: Functor f =>      (a -> b) -> f a -> f b
+liftA :: Applicative f => (a -> b) -> f a -> f b
+liftM :: Monad m =>       (a -> r) -> m a -> m r
+```
+but sometimes we need to lift over more structure than these types permit,
+such as the innermost position in a stack of monad transformers.
+
+#### The typeclass that lifts
+MonadTrans is a typeclass with one core method: `lift`.
+It is for lifting actions in some Monad over a transformer type
+which wraps itself in the original monad.
+```haskell
+class MonadTrans t where
+  lift :: (Monad m) => m a -> t m a
+```
+Let's motivate this with a simple example:
+
+#### Motivating MonadTrans
+Scotty has monad transformers that are themselves newtypes for monad transformer stacks:
+```haskell
+newtype ScottyT e m a =
+  ScottyT { runS :: State (ScottyState e m) a }
+  deriving ( Functor, Applicative, Monad )
+newtype ActionT e m a =
+  ActionT { runAM :: ExceptT (ActionError e)
+                             (ReaderT ActionEnv
+                             (StateT ScottyResponse m)) a }
+  deriving ( Functor, Applicative )
+type ScottyM = ScottyT Text IO
+type ActionM = ActionT Text IO
+```
+
+And this is a hello world example **with a type error**:
+```haskell
+main = scotty 3000 $ do
+  get "/:word" $ do
+    beam <- param "word"
+    -- we cant use IO willy nilly here
+    putStrLn "hello"
+    html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
+```
+We can't use `putStrLn :: IO ()` because the `do` block has type `ActionM ()`.
+Instead, we can lift:
+```haskell
+import Control.Monad.Trans.Class
+lift $ putStrLn "hello"
+```
+Note that `lift` is leveraging the `MonadTrans` instance of `ActionT e`,
+hence `lift :: (MonadTrans t) => IO a -> t IO a` specializes to
+`lift :: IO a -> ActionM a`.
+Running `main` in GHCi and navigating to `http://localhost:3000/beam`
+results in both "Scotty, beam me up!" in the browser and "hello" in the terminal.
+
+Since `ActionT` is itself defined in terms of three more monad transformers,
+it can simply wrap around composed `lift`s:
+```haskell
+instance MonadTrans (ActionT e) where
+  lift = ActionT . lift . lift . lift
+```
+
+Now, if we take all of the individual implementations of those `lift` functions,
+we can see the benefit of this typeclass and how much terseness we gain:
+```haskell
+main = scotty 3000 $ do
+  get "/:word" $ do
+    beam <- param "word"
+      (ActionT
+      . (ExceptT . fmap Right)
+      . ReaderT . const
+      . \m -> StateT (\s -> do
+                         a <- m
+                         return (a, s))
+      ) (putStrLn "hello")
+    html $ mconcat ["<h1>Scotty, ", beam, " me up!</h1>"]
+```
+
+To summarize, lifting is embedding an expression within a larger context
+by adding structure that doesn't do anything.
