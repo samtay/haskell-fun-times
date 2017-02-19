@@ -1,6 +1,9 @@
 {-# LANGUAGE InstanceSigs #-}
 module StateT where
 
+import Control.Monad.Trans.Class
+import Control.Monad.IO.Class
+
 newtype StateT s m a =
   StateT { runStateT :: s -> m (a, s) }
 
@@ -30,3 +33,13 @@ instance (Monad m) => Monad (StateT s m) where
   (StateT sma) >>= f = StateT $ \s1 -> do
     (a, s2) <- sma s1
     (runStateT (f a)) s2
+
+instance MonadTrans (StateT s) where
+  lift ma = StateT $ \s -> do
+    a <- ma
+    return (a, s)
+
+instance (MonadIO m) => MonadIO (StateT s m) where
+  liftIO x = StateT $ \s -> do
+    a <- liftIO x
+    return (a, s)

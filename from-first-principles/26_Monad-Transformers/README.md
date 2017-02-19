@@ -192,6 +192,7 @@ since the logged values can't be retrieved until the computation is complete.
 
 #### The ListT you want isn't made from the List type
 The obvious implementation of ListT is generally not recommended because:
+
 1. The obvious obvious attempt isn't associative.
 2. It's not very fast.
 3. Streaming libraries like [pipes](http://hackage.haskell.org/package/pipes) and [conduit](http://hackage.haskell.org/package/conduit) do it better for most cases.
@@ -342,3 +343,145 @@ main = scotty 3000 $ do
 
 To summarize, lifting is embedding an expression within a larger context
 by adding structure that doesn't do anything.
+
+#### MonadTrans instances
+```haskell
+-- IdentityT
+instance MonadTrans IdentityT where
+  lift = IdentityT
+
+-- MaybeT
+instance MonadTrans MaybeT where
+  lift = MaybeT . liftM Just
+
+-- ReaderT
+instance MonadTrans (ReaderT r) where
+  lift = ReaderT . const
+
+-- 1. EitherT
+instance MonadTrans (EitherT e) where
+  lift = EitherT . liftM Right
+
+-- 2. StateT
+instance MonadTrans (StateT s) where
+  lift ma = StateT $ \s -> do
+    a <- ma
+    return (a, s)
+```
+
+#### Prolific lifting is the failure mode
+Sometimes with conrete, explicitly typed monad transformers you see this hell:
+```haskell
+addSubWidget sub w =
+  do master <- liftHandler getYesod
+    let sr = fromSubRoute sub master
+    i <- GWidget $ lift $ lift $ lift $ lift
+                 $ lift $ lift $ lift get
+    w' <- liftHandler
+          $ toMasterHandlerMaybe sr (const sub) Nothing
+          $ flip runStateT i $ runWriterT $ runWriterT
+          $ runWriterT $ runWriterT $ runWriterT
+          $ runWriterT $ runWriterT $ unGWidget w
+    let ((((((((a,
+                body),
+               title),
+              scripts),
+             stylesheets),
+            style),
+           jscript),
+          h),
+         i') = w'
+    GWidget $ do
+      tell body
+      lift $ tell title
+      lift $ lift $ tell scripts
+      lift $ lift $ lift $ tell stylesheets
+      lift $ lift $ lift $ lift $ tell style
+      lift $ lift $ lift $ lift $ lift $ tell jscript
+      lift $ lift $ lift $ lift $ lift $ lift $ tell h
+      lift $ lift $ lift $ lift
+           $ lift $ lift $ lift $ put i'
+      return a
+```
+Do **not** write code like this.
+
+#### Wrap it, smack it, pre-lift it.
+There are many ways to avoid this hell,
+but one of the most robust and common is
+newtyping your Monad stack and abstracting away the representation,
+then provide functionality leveraging the representation as part of your API.
+Scotty does this well:
+```haskell
+λ> import Web.Scotty
+λ> :info ActionM
+Web.Scotty.Internal.Types.ActionT Text IO
+```
+Scotty hides the underlying type in an Internal module
+because normally developers don't need to worry about it when using the library.
+If they do happen to need it, they can just import the Internal module:
+```haskell
+λ> import Web.Scotty.Internal.Types
+λ> :info ActionT
+newtype ActionT e (m :: * -> *) a
+  = ActionT {runAM :: ExceptT
+                      (ActionError e)
+                      (ReaderT ActionEnv (StateT ScottyResponse m))
+                      a}
+```
+This is good practice;
+it hides unnecessary noise from consumers of the library
+and also reduces manual lifting within the Monad.
+For example, above we only needed one `lift` to perform an IO action in `ActionM`
+even though the underlying implementation has a bunch of transformers in the stack.
+
+### 26.10 MonadIO aka zoom-zoom
+MonadIO is yet another way to lift an action over additional structure.
+MonadIO is different from MonadTrans because rather than lifting through one layer at a time,
+MonadIO keeps lifting your IO action until it is lifted over *all* structure embedded
+within the the outermost IO type.
+Thus, this class is for monads in which IO computations may be embedded.
+*Any* monad built by applying a sequence of monad transformers to the IO monad
+can be an instance of this class.
+```haskell
+class (Monad m) => MonadIO m where
+  liftIO :: IO a -> m a
+
+-- Laws
+
+-- 1 --
+liftIO . return = return
+
+-- 2 --
+liftIO (m >>= f) = liftIO m >>= (liftIO . f)
+```
+
+We can modify the previous Scotty example
+```haskell
+import Control.Monad.IO.Class
+liftIO (putStrLn "hello")
+```
+
+#### MonadIO instances
+```haskell
+-- IdentityT
+instance (MonadIO m) => MonadIO (IdentityT m) where
+  liftIO = IdentityT . liftIO
+
+-- EitherT
+instance (MonadIO m) => MonadIO (EitherT e m) where
+  liftIO = lift . liftIO
+
+-- 1. MaybeT
+instance (MonadIO m) => MonadIO (MaybeT m) where
+  liftIO = lift . liftIO
+
+-- 2. ReaderT
+instance (MonadIO m) => MonadIO (ReaderT r m) where
+  liftIO = ReaderT . const . liftIO
+
+-- 3. StateT
+instance (MonadIO m) => MonadIO (StateT s m) where
+  liftIO x = StateT $ \s -> do
+    a <- liftIO x
+    return (a, s)
+```
