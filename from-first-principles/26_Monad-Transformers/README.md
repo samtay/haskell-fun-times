@@ -485,3 +485,25 @@ instance (MonadIO m) => MonadIO (StateT s m) where
     a <- liftIO x
     return (a, s)
 ```
+
+### 26.12 Monads do not commute
+In general, monads do not commute.
+Some type combinations will not be sensible,
+so we still have to *think* before constructing willy nilly.
+
+For example, take a look at two simple examples of a `ReaderT r Maybe` value
+compared with a `MaybeT (Reader r)` value:
+```haskell
+f :: ReaderT String Maybe Int
+f = ReaderT $ \r -> Just (length r)
+
+g :: MaybeT (Reader String) Int
+g = MaybeT . ReaderT $ \r -> Identity (Just (length r))
+```
+For this very simple example, yes we can create a reader of string values
+and return the length of said string, but it is clear from the implementations
+that these are *very* different types.
+I don't know how to prove this exactly, but intuition leans towards inequality.
+
+### 26.13 Transform if you want to
+
