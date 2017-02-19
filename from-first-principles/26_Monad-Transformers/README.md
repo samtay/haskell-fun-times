@@ -506,4 +506,16 @@ that these are *very* different types.
 I don't know how to prove this exactly, but intuition leans towards inequality.
 
 ### 26.13 Transform if you want to
+According to Chris, most of the time you can get by with
+`liftIO`, plain IO actions and nontransformer types,
+so don't force monad transformers if implementing them is impeding progress.
+When first mapping out something new or unfamiliar,
+do the simplest thing first
+and let more structured formulations fall out naturally.
+Remember, being happy and productive is better than being fancy.
 
+### 26.14 Chapter Exercises
+1. [Write the code](./WriteTheCode.hs)
+2. [Fix the code](./FixTheCode.hs)
+3. [Hit counter](./HitCounter.hs)
+4. [Morra](./morra/src/Main.hs)
