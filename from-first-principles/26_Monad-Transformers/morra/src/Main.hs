@@ -1,9 +1,11 @@
 module Main where
 
 import Control.Monad (unless, void, forever)
-import Control.Monad.IO.Class
+import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.State
 import System.Exit (exitSuccess)
+import System.IO (hFlush, stdout)
+
 
 -- Two player score
 -- First player wants odd, second wants even
@@ -68,7 +70,7 @@ recordTurn num (GameStatus p1 p2 t) =
 turn :: Game ()
 turn = do
   t    <- gets gsTurn
-  pick <- liftIO $ putStr (show t ++ ": ") >> read <$> getLine
+  pick <- liftIO $ putStr (show t ++ ": ") >> hFlush stdout >> read <$> getLine
   modify (recordTurn pick)
 
 game :: Game Player
@@ -98,6 +100,7 @@ match initial = do
 continue :: IO Bool
 continue = do
   putStr "Continue [y/n]? "
+  hFlush stdout
   input <- getLine
   return $ any isYes input
     where isYes = (||) <$> (=='y') <*> (=='Y')
