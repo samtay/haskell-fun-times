@@ -25,6 +25,7 @@ data GameState = GameState
   , gPickP2 :: Maybe Pick
   , gTurn   :: Player
   , gType   :: P2Type
+  , p1Picks :: [Pick]
   , scoreP1 :: Int
   , scoreP2 :: Int
   } deriving (Eq, Show)
@@ -32,7 +33,7 @@ data GameState = GameState
 type Game = StateT GameState IO
 
 getGameWinner :: GameState -> Maybe Player
-getGameWinner (GameState (Just p1) (Just p2) _ _ _ _) =
+getGameWinner GameState {gPickP1 = (Just p1), gPickP2 = (Just p2)} =
   Just $ case (p1 + p2) `mod` 2 of
     1 -> P1
     0 -> P2
@@ -46,7 +47,7 @@ printGameWinner = do
     _      -> return ()
 
 getMatchWinner :: GameState -> Maybe Player
-getMatchWinner (GameState _ _ _ _ s1 s2) =
+getMatchWinner GameState {scoreP1 = s1, scoreP2 = s2} =
   case compare s1 s2 of
     LT -> Just P2
     EQ -> Nothing
@@ -85,10 +86,14 @@ getHumanPick = do
   return x
 
 getCompPick :: Game Pick
-getCompPick = liftIO $ do
-  x <- randomRIO (1,1000)
-  print x
-  return x
+getCompPick =  do
+  ps <- gets p1Picks
+  p  <- maybe
+          (liftIO $ randomRIO (1,1000))
+          return
+          (predictPick ps)
+  liftIO $ print p
+  return p
 
 game :: Game Player
 game = do
@@ -98,13 +103,17 @@ game = do
     Just p  -> printGameWinner >> return p
 
 recordWin :: Player -> GameState -> GameState
-recordWin p g@(GameState _ _ _ _ s1 s2) =
+recordWin p g@(GameState {scoreP1 = s1, scoreP2 = s2}) =
   case p of
     P1 -> g { scoreP1 = succ s1 }
     P2 -> g { scoreP2 = succ s2 }
 
 resetGame :: GameState -> GameState
 resetGame g = g { gPickP1 = Nothing, gPickP2 = Nothing, gTurn = P1 }
+
+recordHuman :: GameState -> GameState
+recordHuman g@GameState { gPickP1 = (Just x), p1Picks = xs } =
+  g { p1Picks = x : xs }
 
 match :: Bool -- ^ Initial game flag
       -> Game ()
@@ -115,6 +124,7 @@ match initial = do
   forever $ do
     modify resetGame
     w <- game
+    modify recordHuman
     modify (recordWin w)
     match False
 
@@ -134,9 +144,22 @@ promptType =
   bool Human Computer
     <$> prompt "Play computer?"
 
+emptyGame :: GameState
+emptyGame = GameState Nothing Nothing P1 Human [] 0 0
+
+-- Looks at an array to see if the latest 2-length sequence occurs previously.
+-- If it does, returns following element, else Nothing.
+--
+-- It's ok to just return the 3rd element because x + x % 2 == 0 ;)
+predictPick :: Eq a => [a] -> Maybe a
+predictPick (x:y:xs) = find x y xs
+  where find a b (x:y:z:xs) = if (a,b) == (y, z) then Just x else find a b (y:z:xs)
+        find _ _ _ = Nothing
+
+predictPick _ = Nothing
+
 main :: IO ()
 main = do
   putStrLn "Welcome to Morra!"
-  ptype <- promptType
-  void $ runStateT (match True)
-    (GameState Nothing Nothing P1 ptype 0 0)
+  t <- promptType
+  void $ runStateT (match True) emptyGame { gType = t }
