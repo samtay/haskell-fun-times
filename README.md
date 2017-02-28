@@ -34,6 +34,7 @@ Just a repo of me learning and playing with haskell
 - [Parsing](http://www.serpentine.com/blog/2007/01/31/parsing-a-simple-config-file-in-haskell/) a simple config file
 - [Parsing](https://two-wrongs.com/parser-combinators-parsing-for-haskell-beginners) for beginners
 - [CPP reference](https://guide.aelve.com/haskell/cpp-vww0qd72)
+- [Lazy evaluation tutorial](https://hackhands.com/guide-lazy-evaluation-haskell/)
 
 #### misc
 - Great [brain dump](http://dev.stephendiehl.com/hask/) by Stephen Diehl
