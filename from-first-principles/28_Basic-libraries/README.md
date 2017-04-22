@@ -228,3 +228,52 @@ Furthermore, this can be speeded up by 1.4% by putting the updates in a Vector t
 in which case we use `V.unsafeUpdate` instead of `V.//`.
 
 #### Mutable Vectors
+We can squeeze even more performance out of vectors, when necessary, by using mutation.
+Here are two different methods, IO and ST:
+```haskell
+import Control.Monad.Primitive
+import Control.Monad.ST
+import Criterion.Main
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as MV
+import qualified Data.Vector.Generic.Mutable as GM
+
+mutableUpdateIO :: Int -> IO (MV.MVector RealWorld Int)
+mutableUpdateIO n = do
+  mvec <- GM.new (n+1)
+  go n mvec
+  where go 0 v = return v
+        go n v = (MV.write v n 0) >> go (n-1) v
+
+mutableUpdateST :: Int -> V.Vector Int
+mutableUpdateST n = runST $ do
+  mvec <- GM.new (n+1)
+  go n mvec
+  where go 0 v = V.freeze v
+        go n v = (MV.write v n 0) >> go (n-1) v
+```
+and the performance results of all these methods, updating a 10,000 element list:
+
+Variant | Microseconds
+--- | ---
+slow | 133,600
+batchList | 244
+batchVector | 176
+mutableUpdateST | 32
+mutableUpdateIO | 19
+
+ST is slightly slower than the IO version due to the freezing and unfreezing. The biggest
+improvement is from not being an idiot.
+
+ST works by unfreezing data, mutating it, and then refreezing it so that it cannot be mutated further,
+and thus manages to maintain referential transparency.
+Under the hood it looks like a primitive `GHC.Prim.State# s -> (# GHC.Prim.State# s, a #)` type.
+The state `s` is not the actual thing we're mutating, and has no value level witness.
+The `s` type enables `ST` to enforce at compile-time that the mutable references to persistent
+immutable data structures are kept within the `ST` monad, using a trick called
+*existential quantification*.
+
+The thaws and freezes from dipping in and out of ST are costly - if it has to happen often,
+it is probably better to just use `IO`.
+
+### 28.9 String types
