@@ -30,20 +30,12 @@ toList (Queue es ds) = reverse ds ++ es
 listTest :: Int -> [Int]
 listTest i = go i [1..100]
   where go 0 xs = xs
-        go n xs = if even n
-                     -- pop
-                     then go (n-1) (init xs)
-                     -- push
-                     else go (n-1) (n:xs)
+        go n xs = go (n-1) (last xs : init xs)
 
 queueTest :: Int -> [Int]
 queueTest i = toList $ go i $ fromList [1..100]
   where go 0 xs = xs
-        go n xs = if even n
-                     -- pop
-                     then let Just (_, ys) = pop xs in go (n-1) ys
-                     -- push
-                     else go (n-1) (push n xs)
+        go n xs = let Just (x, ys) = pop xs in go (n-1) (push x ys)
 
 main :: IO ()
 main = defaultMain
