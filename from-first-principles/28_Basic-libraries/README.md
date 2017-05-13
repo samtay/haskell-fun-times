@@ -308,4 +308,5 @@ encoded data in UTF-8, instead of encoding/decoding it out of Text.
 
 ### 28.10 Chapter Exercises
 
-1. [Difference List](./DList.hs)
+1. [Difference list](./DList.hs): **note** right now benchmarks don't show improvement.
+2. [A simple queue](./Queue.hs): **note** right now benchmarks don't show improvement.
