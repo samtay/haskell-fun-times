@@ -277,3 +277,35 @@ The thaws and freezes from dipping in and out of ST are costly - if it has to ha
 it is probably better to just use `IO`.
 
 ### 28.9 String types
+#### String
+`String`s in Haskell are okay for demonstrations or toy programs, but the memory usage
+for large strings can get out of control rapidly, and most operations
+on them have times proportional to the length of the list.
+
+#### Text
+`Text` is good for when we have plain text and need better memory usage performance
+and more efficient indexing into the string. However, Text is encoded as
+UTF-16, and while this is faster, it can be unexpected since UTF-8 is vastly
+more popular.
+
+#### ByteString
+ByteStrings are not necessarily strings/text, but a sequence of bytes represented
+as a vector of Word8 values. Note that text on a computer is obviously always
+made up of bytes, but needs an encoding in order to be "read" as text (such as
+the common ASCII, UTF-8, UTF-16, etc.). As we mentioned, Text uses size 16 to
+read larger chunks at a time, increasing performance.
+
+The downside to ByteString is that it encompasses byte data that might not be
+"readable" text, which can be a problem if you don't want to permit non-text
+byte sequences.
+
+Note that in most cases **Data.ByteString.Char8** is not what you're looking for,
+as it doesn't support Unicode, and is **only** for ASCII data.
+
+#### ByteString vs. Text
+Sometimes you'll choose ByteString over Text if you want to keep incoming UTF-8
+encoded data in UTF-8, instead of encoding/decoding it out of Text.
+
+### 28.10 Chapter Exercises
+
+1. [Difference List](./DList.hs)
