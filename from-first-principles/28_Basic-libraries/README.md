@@ -308,5 +308,34 @@ encoded data in UTF-8, instead of encoding/decoding it out of Text.
 
 ### 28.10 Chapter Exercises
 
-1. [Difference list](./DList.hs): **note** right now benchmarks don't show improvement.
-2. [A simple queue](./Queue.hs): **note** right now benchmarks don't show improvement.
+1. [Difference list](./DList.hs): **note** right now benchmarks don't show improvement:
+
+  ```
+  benchmarking concat list
+  time                 55.59 ms   (54.99 ms .. 56.29 ms)
+                       1.000 R²   (0.999 R² .. 1.000 R²)
+  mean                 54.90 ms   (54.64 ms .. 55.19 ms)
+  std dev              492.0 μs   (304.4 μs .. 812.6 μs)
+
+  benchmarking concat dlist
+  time                 55.12 ms   (54.74 ms .. 55.39 ms)
+                       1.000 R²   (1.000 R² .. 1.000 R²)
+  mean                 54.87 ms   (54.49 ms .. 55.06 ms)
+  std dev              513.6 μs   (83.54 μs .. 905.2 μs)
+  ```
+2. [A simple queue](./Queue.hs): **note** right now benchmarks don't show improvement:
+
+  ```
+  benchmarking pop/push list
+  time                 52.62 ms   (52.21 ms .. 52.94 ms)
+                       1.000 R²   (1.000 R² .. 1.000 R²)
+  mean                 52.46 ms   (52.10 ms .. 52.71 ms)
+  std dev              533.0 μs   (345.8 μs .. 838.3 μs)
+
+  benchmarking pop/push queue
+  time                 248.4 ms   (241.4 ms .. 260.9 ms)
+                       0.999 R²   (0.993 R² .. 1.000 R²)
+  mean                 244.8 ms   (237.5 ms .. 248.8 ms)
+  std dev              7.094 ms   (465.4 μs .. 9.180 ms)
+  variance introduced by outliers: 16% (moderately inflated)
+  ```
