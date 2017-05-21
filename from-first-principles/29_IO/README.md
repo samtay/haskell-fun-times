@@ -165,4 +165,33 @@ recipes, not executing actions. Binding over an IO action does not execute it, i
 *new* IO action in terms of the old one.
 
 ### 29.8 Well, then, how do we MVar?
+So, the right way to refer to the MVar in the above example is:
+```haskell
+import Control.Concurrent
+main :: IO ()
+main = do
+  mv <- newEmptyMVar
+  putMVar mv (0 :: Int)
+  zero <- takeMVar mv
+  print zero
+```
+But we can also do this in a sinister manner via `unsafePerformIO`:
+```haskell
+import Control.Concurrent
+import System.IO.Unsafe
+myData :: MVar Int
+myData = unsafePerformIO newEmptyMVar
+main :: IO ()
+main = do
+  putMVar myData 0
+  zero <- takeMVar myData
+  print zero
+```
 
+Note that `unsafePerformIO :: IO a -> a`, which is definitely not a good idea, and can
+actually break referential transparency, but it does allow us to accomplish implicit
+sharing of the MVar wherever we want.  In real code we'd pass references to MVars around
+as arguments (typically using Reader monad).
+
+### 29.9 Chapter Exercises
+1. [File I/O with Vigenere](./Vigenere/Main.hs)
