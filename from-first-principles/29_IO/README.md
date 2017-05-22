@@ -55,7 +55,7 @@ outer `main :: IO ()` type. To look at exactly where this does and doesn't happe
 let's consider MVar.
 
 The MVar type is a means of synchronizing shared data in Haskell. It can hold one value at a time.
-Consider the following code at [WhatHappens.hs](./WhatHappens.hs):
+Consider the following code:
 ```haskell
 module WhatHappens where
 
@@ -195,3 +195,4 @@ as arguments (typically using Reader monad).
 
 ### 29.9 Chapter Exercises
 1. [File I/O with Vigenere](./Vigenere/Main.hs)
+2. [Config directories](./Config/Main.hs)
