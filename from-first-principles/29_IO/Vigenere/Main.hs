@@ -1,6 +1,6 @@
 #!/usr/bin/env stack
 {- stack runghc
-  --resolver lts-8
+  --resolver lts-7
   --install-ghc
 -}
 
@@ -14,30 +14,52 @@
 -- I could use parseopt-applicative, but since I'm already familiar
 -- with it, I'll learn more restricting myself to Prelude.
 
+import Control.Monad (when)
 import System.Environment (getArgs)
-import System.IO (hPutStrLn, hGetChar, hWaitForInput, stdout, stdin, stderr)
+import System.Exit (exitFailure, exitSuccess)
+import System.IO (hPutStrLn, hWaitForInput, stdin, stderr)
+import System.IO.Error (catchIOError, isEOFError)
 
 import Cipher (ceaser, unCeaser)
 
 data Mode = Encrypt | Decrypt
   deriving (Eq, Show)
 
-data Options = Options { mode    :: Maybe Mode
+data Options = Options { mode    :: Mode
                        , timeout :: Int
                        , key     :: Int
                        } deriving (Eq, Show)
 
 main :: IO ()
 main = do
-  (Options mm t k) <- parseOpts <$> getArgs
+  opts <- parseOpts <$> getArgs
   maybe
     showHelp
-    (\m -> exec m t k)
-    mm
+    (\(Options m t k) -> exec m t k)
+    opts
 
 exec :: Mode -> Int -> Int -> IO ()
-exec Encrypt t k = interact (ceaser k)
-exec Decrypt t k = interact (unCeaser k)
+exec Encrypt t k = handleIO t (ceaser k)
+exec Decrypt t k = handleIO t (unCeaser k)
+
+handleIO :: Int -> (String -> String) -> IO ()
+handleIO t fn = go ""
+  where go input = do
+            -- Wait for input
+            inputAvailable <- catchIOError
+              (hWaitForInput stdin t)
+              (\e -> if isEOFError e
+                        then return False
+                        else ioError e)
+            -- Exit if no content after timeout
+            when (not inputAvailable && null input)
+              $ hPutStrLn stderr "No input given within time limit." >> exitFailure
+            -- Collect single char if within timeout
+            when inputAvailable
+              $ (:input) <$> getChar >>= go
+            -- Decode to stdout after timeout
+            when (not inputAvailable && not (null input))
+              $ putStrLn (fn input) >> exitSuccess
 
 showHelp :: IO ()
 showHelp = mapM_ (hPutStrLn stderr)
@@ -46,18 +68,19 @@ showHelp = mapM_ (hPutStrLn stderr)
   , "Example: echo 'hello world' | vigenere -e"
   , ""
   , "Options:"
-  , "  -e          encrypt"
+  , "  -e          encrypt (default)"
   , "  -d          decrypt"
   , "  -t<NUM>     set timeout (default 5 seconds)"
   ]
 
 defaultOptions :: Options
-defaultOptions = Options Nothing 5 2
+defaultOptions = Options Encrypt 5000 2
 
-parseOpts :: [String] -> Options
-parseOpts = foldr go defaultOptions
-  where go "-e" os = os {mode = Just Encrypt}
-        go "-d" os = os {mode = Just Decrypt}
-        go ('-':'t':num) os = os {timeout = read num}
-        go ('-':'k':num) os = os {key = read num}
-        go _ os = os
+parseOpts :: [String] -> Maybe Options
+parseOpts = foldr go (Just defaultOptions)
+  where go _ Nothing               = Nothing
+        go "-e" (Just os)          = Just os {mode = Encrypt}
+        go "-d" (Just os)          = Just os {mode = Decrypt}
+        go ('-':'t':num) (Just os) = Just os {timeout = read num * 1000}
+        go ('-':'k':num) (Just os) = Just os {key = read num}
+        go _ _                     = Nothing
