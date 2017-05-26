@@ -4,6 +4,9 @@ import Control.Monad (forever)
 import Network.Socket hiding (recv)
 import Network.Socket.ByteString (recv, sendAll)
 
+port :: String
+port = "79"
+
 logAndEcho :: Socket -> IO ()
 logAndEcho sock = forever $ do
   (soc, _) <- accept sock
@@ -19,7 +22,7 @@ main = withSocketsDo $ do
   addrinfos <- getAddrInfo
                (Just (defaultHints {addrFlags = [AI_PASSIVE]}))
                Nothing
-               (Just "79")
+               (Just port)
   let serveraddr = head addrinfos
   sock <- socket (addrFamily serveraddr) Stream defaultProtocol
   bind sock (addrAddress serveraddr)
