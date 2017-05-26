@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings, QuasiQuotes, RecordWildCards #-}
-module Main where
+module FingerD where
 
 import Control.Exception
 import Control.Monad (void, forever)
@@ -54,11 +54,11 @@ CREATE TABLE IF NOT EXISTS users
    phone TEXT)
 |]
 
-insertUser :: Query
-insertUser = "INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)"
+insertUserQuery :: Query
+insertUserQuery = "INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)"
 
-allUsers :: Query
-allUsers = "SELECT * FROM users"
+allUsersQuery :: Query
+allUsersQuery = "SELECT * FROM users"
 
 getUserQuery :: Query
 getUserQuery = "SELECT * FROM users WHERE username = ?"
@@ -74,8 +74,8 @@ createDatabase :: IO ()
 createDatabase = do
   conn <- open "finger.db"
   execute_ conn createUsersTable
-  execute conn insertUser meRow
-  rows <- query_ conn allUsers
+  execute conn insertUserQuery meRow
+  rows <- query_ conn allUsersQuery
   mapM_ print (rows :: [User])
   SQLite.close conn
     where meRow :: UserRow
@@ -91,7 +91,7 @@ getUser conn username = do
 
 returnUsers :: Connection -> Socket -> IO ()
 returnUsers dbConn soc = do
-  rows <- query_ dbConn allUsers
+  rows <- query_ dbConn allUsersQuery
   let usernames = map username rows
       newlineSeparated = T.concat $ intersperse "\n" usernames
   sendAll soc (encodeUtf8 newlineSeparated)

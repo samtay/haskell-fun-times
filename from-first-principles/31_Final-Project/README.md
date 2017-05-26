@@ -19,7 +19,7 @@ The finger protocol operates over TCP (Transmission Control Protocol) just like 
 However, the web has HTTP, an entire application protocol layered atop TCP, whereas
 the finger protocol is just a single message text protocol.
 
-#### [Debug](./src/Debug.hs)
+#### [Debug](./app/Debug.hs)
 The debug program is used to show us what the client sends. It is a TCP server,
 similar to a web server that provides a web page, but lower level and limited to
 sending raw text back and forth. It's set to run at port 79.
@@ -58,3 +58,7 @@ what information gets sent to the TCP server that we're about to build!
 ### 31.4 Slightly modernized fingerd
 Historically `finger` returned data about users pertaining to the operating system.
 We're going to update the source of data for `finger` using an embedded SQLite database.
+
+### 31.5 Chapter Exercises
+1. Use the `sqlite3` command line interface to add a new user: *easy*.
+2. Write another executable that adds users to the database: [AddUser](./app/AddUser.hs).
