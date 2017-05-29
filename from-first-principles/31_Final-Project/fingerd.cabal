@@ -44,6 +44,7 @@ library
   exposed-modules:     FingerD
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
+                     , aeson
                      , bytestring
                      , network
                      , raw-strings-qq

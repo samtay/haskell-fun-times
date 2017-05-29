@@ -62,3 +62,8 @@ We're going to update the source of data for `finger` using an embedded SQLite d
 ### 31.5 Chapter Exercises
 1. Use the `sqlite3` command line interface to add a new user: *easy*.
 2. Write another executable that adds users to the database: [AddUser](./app/AddUser.hs).
+3. Add ability to modify existing user: done in [AddUser](./app/AddUser.hs).
+4. Bound on a different port, try creating a “control socket” that permits
+inserting new data into the database while the server is running.
+For bonus points, write your own client executable that takes the
+arguments from the command line as well. See [FingerD](./src/FingerD.hs).
