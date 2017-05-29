@@ -62,3 +62,30 @@ pure (flip ($)) <*> x <*> pure f  =  pure (flip ($)) <*> pure y <*> pure f  -- b
 Note: This assumes existence of inverse of `pure`, that is, retrieving a direct value from a context.
 
 # 4.3 Instances
+### 1. Implement an instance of `Applicative` for `Maybe`
+```haskell
+instance Applicative Maybe where
+  pure = Just
+  (Just f) <*> (Just x) = Just (f x)
+  _ <*> _               = Nothing
+
+```
+
+### 2. Determine the correct definition of `pure` for this instance of `ZipList`
+```haskell
+newtype ZipList a = ZipList { getZipList :: [a] }
+
+instance Applicative ZipList where
+  pure x = ZipList $ repeat x
+  (ZipList gs) <*> (ZipList xs) = ZipList (zipWith ($) gs xs)
+```
+
+# 4.5 Utility functions
+
+### 1. Implement a function `sequenceAL :: Applicative f => [f a] -> f [a]`.
+```haskell
+sequenceAL :: Applicative f => [f a] -> f [a]
+sequenceAL = foldr (liftA2 (:)) (pure [])
+```
+
+# 4.6 Alternative formulation
