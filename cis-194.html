@@ -1,0 +1,821 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="https://necolas.github.io/normalize.css/latest/normalize.css" type="text/css" />
+  <link rel="stylesheet" href="https://gist.githubusercontent.com/dashed/6714393/raw/ae966d9d0806eb1e24462d88082a0264438adc50/github-pandoc.css" type="text/css" />
+  <link rel="stylesheet" href="/haskell-fun-times/css/custom.css" type="text/css" />
+</head>
+<body>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE FlexibleInstances #-}</span>
+<span class="ot">{-# OPTIONS_GHC -fno-warn-missing-methods #-}</span>
+<span class="kw">module</span> <span class="dt">Laziness</span> <span class="kw">where</span>
+
+<span class="co">-- Exercise 1</span>
+<span class="ot">fib ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span>
+fib <span class="dv">0</span> <span class="fu">=</span> <span class="dv">0</span>
+fib <span class="dv">1</span> <span class="fu">=</span> <span class="dv">1</span>
+fib n <span class="fu">=</span> fib (n<span class="fu">-</span><span class="dv">1</span>) <span class="fu">+</span> fib (n<span class="fu">-</span><span class="dv">2</span>)
+
+<span class="ot">fibs1 ::</span> [<span class="dt">Integer</span>]
+fibs1 <span class="fu">=</span> fib <span class="fu">&lt;$&gt;</span> [<span class="dv">0</span><span class="fu">..</span>]
+
+<span class="co">-- Exercise 2</span>
+<span class="ot">fibs2 ::</span> [<span class="dt">Integer</span>]
+fibs2 <span class="fu">=</span> go <span class="dv">0</span> <span class="dv">1</span>
+  <span class="kw">where</span> go x y <span class="fu">=</span> x <span class="fu">:</span> go y (x <span class="fu">+</span> y)
+
+<span class="co">-- Exercise 3</span>
+<span class="kw">data</span> <span class="dt">Stream</span> a <span class="fu">=</span> <span class="dt">Cons</span> a (<span class="dt">Stream</span> a)
+
+<span class="ot">maxVisible ::</span> <span class="dt">Integer</span>
+maxVisible <span class="fu">=</span> <span class="dv">20</span>
+<span class="kw">instance</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">Stream</span> a) <span class="kw">where</span>
+  show <span class="fu">=</span> (<span class="st">&quot;Stream(&quot;</span> <span class="fu">++</span>) <span class="fu">.</span> (<span class="fu">++</span> <span class="st">&quot;...)&quot;</span>) <span class="fu">.</span> go maxVisible
+    <span class="kw">where</span> go n (<span class="dt">Cons</span> x xs)
+            <span class="fu">|</span> n <span class="fu">==</span> <span class="dv">0</span> <span class="fu">=</span> <span class="st">&quot;&quot;</span>
+            <span class="fu">|</span> otherwise <span class="fu">=</span> show x <span class="fu">++</span> <span class="st">&quot;, &quot;</span> <span class="fu">++</span> go (n<span class="fu">-</span><span class="dv">1</span>) xs
+
+<span class="ot">streamToList ::</span> <span class="dt">Stream</span> a <span class="ot">-&gt;</span> [a]
+streamToList (<span class="dt">Cons</span> x xs) <span class="fu">=</span> x <span class="fu">:</span> streamToList xs
+
+<span class="co">-- Exercise 4</span>
+<span class="ot">streamRepeat ::</span> a <span class="ot">-&gt;</span> <span class="dt">Stream</span> a
+streamRepeat x <span class="fu">=</span> <span class="dt">Cons</span> x <span class="fu">$</span> streamRepeat x
+
+<span class="ot">streamMap ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> <span class="dt">Stream</span> a <span class="ot">-&gt;</span> <span class="dt">Stream</span> b
+streamMap <span class="fu">=</span> fmap
+
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Stream</span> <span class="kw">where</span>
+  fmap f (<span class="dt">Cons</span> x xs) <span class="fu">=</span> <span class="dt">Cons</span> (f x) <span class="fu">$</span> fmap f xs
+
+<span class="ot">streamFromSeed ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Stream</span> a
+streamFromSeed f x <span class="fu">=</span> <span class="dt">Cons</span> (f x) <span class="fu">$</span> streamFromSeed f (f x)
+
+<span class="co">-- Exercise 5</span>
+<span class="ot">nats ::</span> <span class="dt">Stream</span> <span class="dt">Integer</span>
+nats <span class="fu">=</span> streamFromSeed (<span class="fu">+</span><span class="dv">1</span>) <span class="dv">0</span>
+
+<span class="ot">ruler ::</span> <span class="dt">Stream</span> <span class="dt">Integer</span>
+ruler <span class="fu">=</span> go <span class="dv">0</span>
+  <span class="kw">where</span> go n <span class="fu">=</span> interleaveStreams (streamRepeat n) (go <span class="fu">$</span> n <span class="fu">+</span> <span class="dv">1</span>)
+
+<span class="ot">interleaveStreams ::</span> <span class="dt">Stream</span> a <span class="ot">-&gt;</span> <span class="dt">Stream</span> a <span class="ot">-&gt;</span> <span class="dt">Stream</span> a
+interleaveStreams (<span class="dt">Cons</span> x xs) ys <span class="fu">=</span> <span class="dt">Cons</span> x (interleaveStreams ys xs)
+
+<span class="co">-- Exercise 6 (extra credit)</span>
+<span class="co">-- My wheelhouse! Using streams to represent infinite polynomials in generating functions</span>
+<span class="ot">x1 ::</span> <span class="dt">Stream</span> <span class="dt">Integer</span>
+x1 <span class="fu">=</span> <span class="dt">Cons</span> <span class="dv">0</span> <span class="fu">$</span> <span class="dt">Cons</span> <span class="dv">1</span> <span class="fu">$</span> streamRepeat <span class="dv">0</span>
+
+<span class="kw">instance</span> <span class="dt">Num</span> (<span class="dt">Stream</span> <span class="dt">Integer</span>) <span class="kw">where</span>
+  fromInteger n <span class="fu">=</span> <span class="dt">Cons</span> n <span class="fu">$</span> streamRepeat <span class="dv">0</span>
+  negate <span class="fu">=</span> fmap negate
+  (<span class="dt">Cons</span> x xs) <span class="fu">+</span> (<span class="dt">Cons</span> y ys) <span class="fu">=</span> <span class="dt">Cons</span> (x <span class="fu">+</span> y) <span class="fu">$</span> xs <span class="fu">+</span> ys
+  (<span class="dt">Cons</span> x xs) <span class="fu">*</span> (<span class="dt">Cons</span> y ys) <span class="fu">=</span>
+    <span class="dt">Cons</span> (x <span class="fu">*</span> y) <span class="fu">$</span> ( (fromInteger x) <span class="fu">*</span> ys
+                   <span class="fu">+</span> xs <span class="fu">*</span> (<span class="dt">Cons</span> y ys)
+                   )
+
+<span class="kw">instance</span> <span class="dt">Fractional</span> (<span class="dt">Stream</span> <span class="dt">Integer</span>) <span class="kw">where</span>
+  xss<span class="fu">@</span>(<span class="dt">Cons</span> x xs) <span class="fu">/</span> yss<span class="fu">@</span>(<span class="dt">Cons</span> y ys) <span class="fu">=</span>
+    <span class="dt">Cons</span> (x <span class="ot">`div`</span> y) <span class="fu">$</span> (<span class="dt">Cons</span> (<span class="dv">1</span> <span class="ot">`div`</span> y) <span class="fu">$</span> streamRepeat <span class="dv">0</span>) <span class="fu">*</span> (xs <span class="fu">-</span> (xss <span class="fu">/</span> yss) <span class="fu">*</span> ys)
+
+<span class="ot">fibs3 ::</span> <span class="dt">Stream</span> <span class="dt">Integer</span>
+fibs3 <span class="fu">=</span> x1 <span class="fu">/</span> (<span class="dv">1</span> <span class="fu">-</span> x1 <span class="fu">-</span> x1<span class="fu">^</span>(<span class="dv">2</span><span class="ot">::</span><span class="dt">Integer</span>))
+
+<span class="co">-- Exercise 7 (extra credit)</span>
+<span class="kw">data</span> <span class="dt">M</span> <span class="fu">=</span> <span class="dt">M</span> <span class="dt">Integer</span> <span class="dt">Integer</span>
+           <span class="dt">Integer</span> <span class="dt">Integer</span>
+  <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)
+
+<span class="kw">instance</span> <span class="dt">Num</span> <span class="dt">M</span> <span class="kw">where</span>
+  (<span class="dt">M</span> a b c d) <span class="fu">*</span> (<span class="dt">M</span> w x y z) <span class="fu">=</span> <span class="dt">M</span> (a<span class="fu">*</span>w <span class="fu">+</span> b<span class="fu">*</span>y) (a<span class="fu">*</span>x <span class="fu">+</span> b<span class="fu">*</span>z) (c<span class="fu">*</span>w <span class="fu">+</span> d<span class="fu">*</span>y) (c<span class="fu">*</span>x <span class="fu">+</span> d<span class="fu">*</span>z)
+
+<span class="ot">fib4 ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span>
+fib4 n <span class="fu">=</span> <span class="kw">let</span> (<span class="dt">M</span> _ m _ _) <span class="fu">=</span> (<span class="dt">M</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">1</span> <span class="dv">0</span>)<span class="fu">^</span>n <span class="kw">in</span> m</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Main</span> <span class="kw">where</span>
+
+<span class="co">-- Exercise 1 : Wholemeal programming</span>
+<span class="co">-- Reimplement each of the following functions in a more idiomatic</span>
+<span class="co">-- Haskell style. Use wholemeal programming practices, breaking each</span>
+<span class="co">-- function into a pipeline of incremental transformations to an entire</span>
+<span class="co">-- data structure. Name your functions fun1’ and fun2’ respectively.</span>
+<span class="co">-- Hint: For this problem you may wish to use the functions</span>
+<span class="co">-- iterate and takeWhile. Look them up in the Prelude documentation to see</span>
+<span class="co">-- what they do.</span>
+
+<span class="co">-- 1 .</span>
+<span class="ot">fun1 ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span>
+fun1 []     <span class="fu">=</span> <span class="dv">1</span>
+fun1 (x<span class="fu">:</span>xs)
+  <span class="fu">|</span> even x    <span class="fu">=</span> (x <span class="fu">-</span> <span class="dv">2</span>) <span class="fu">*</span> fun1 xs
+  <span class="fu">|</span> otherwise <span class="fu">=</span> fun1 xs
+
+<span class="ot">fun1&#39; ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> <span class="dt">Int</span>
+fun1&#39; <span class="fu">=</span> product <span class="fu">.</span> map (subtract <span class="dv">2</span>) <span class="fu">.</span> filter even
+
+<span class="co">-- 2 .</span>
+<span class="ot">fun2 ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+fun2 <span class="dv">1</span> <span class="fu">=</span> <span class="dv">0</span>
+fun2 n <span class="fu">|</span> even n    <span class="fu">=</span> n <span class="fu">+</span> fun2 (n <span class="ot">`div`</span> <span class="dv">2</span>)
+       <span class="fu">|</span> otherwise <span class="fu">=</span> fun2 (<span class="dv">3</span> <span class="fu">*</span> n <span class="fu">+</span> <span class="dv">1</span>)
+
+<span class="ot">fun2&#39; ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+fun2&#39; <span class="fu">=</span> sum
+  <span class="fu">.</span> filter even
+  <span class="fu">.</span> takeWhile (<span class="fu">/=</span><span class="dv">1</span>)
+  <span class="fu">.</span> iterate (\n <span class="ot">-&gt;</span> <span class="kw">if</span> even n <span class="kw">then</span> n <span class="ot">`div`</span> <span class="dv">2</span> <span class="kw">else</span> <span class="dv">3</span> <span class="fu">*</span> n <span class="fu">+</span> <span class="dv">1</span>)
+
+<span class="ot">testequiv ::</span> <span class="dt">Eq</span> b <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+testequiv f1 f2 <span class="fu">=</span> (<span class="fu">==</span>) <span class="fu">&lt;$&gt;</span> f1 <span class="fu">&lt;*&gt;</span> f2
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> <span class="kw">do</span>
+  <span class="kw">let</span> l2 <span class="fu">=</span> [<span class="fu">-</span><span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">3</span>, <span class="dv">8</span>, <span class="dv">9</span>]
+      l1 <span class="fu">=</span> [<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>]
+  <span class="kw">if</span> all (testequiv fun1 fun1&#39;) [l1, l2]
+     <span class="kw">then</span> putStrLn <span class="st">&quot;Test fun1 == fun1&#39; passed&quot;</span>
+     <span class="kw">else</span> putStrLn <span class="st">&quot;Test fun1 == fun1&#39; failed&quot;</span>
+  <span class="kw">if</span> all (testequiv fun2 fun2&#39;) l1
+     <span class="kw">then</span> putStrLn <span class="st">&quot;Test fun2 == fun2&#39; passed&quot;</span>
+     <span class="kw">else</span> putStrLn <span class="st">&quot;Test fun2 == fun2&#39; failed&quot;</span>
+
+<span class="co">-- Exercise 2 : Folding with trees</span>
+<span class="co">-- Recall the definition of a binary tree data structure. The height of a</span>
+<span class="co">-- a binary tree is the length of a path from the root to the deepest</span>
+<span class="co">-- node. For example, the height of a tree with a single node is 0; the</span>
+<span class="co">-- height of a tree with three nodes, whose root has two children, is 1;</span>
+<span class="co">-- and so on. A binary tree is balanced if the height of its left and right</span>
+<span class="co">-- subtrees differ by no more than 1, and its left and right subtrees are</span>
+<span class="co">-- also balanced.</span>
+<span class="co">--</span>
+<span class="co">-- You should use the following data structure to represent binary</span>
+<span class="co">-- trees. Note that each node stores an extra Int representing the</span>
+<span class="co">-- height at that node.</span>
+
+<span class="kw">data</span> <span class="dt">Tree</span> a <span class="fu">=</span> <span class="dt">Leaf</span>
+            <span class="fu">|</span> <span class="dt">Node</span> <span class="dt">Int</span> (<span class="dt">Tree</span> a) a (<span class="dt">Tree</span> a)
+            <span class="kw">deriving</span> (<span class="dt">Eq</span>)
+
+<span class="co">-- For this exercise, write a function which generates a balanced binary</span>
+<span class="co">-- tree from a list of values using foldr.</span>
+
+<span class="ot">foldTree ::</span> [a] <span class="ot">-&gt;</span> <span class="dt">Tree</span> a
+foldTree <span class="fu">=</span> foldr insert <span class="dt">Leaf</span>
+
+<span class="ot">insert ::</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a
+insert x <span class="dt">Leaf</span>             <span class="fu">=</span> <span class="dt">Node</span> <span class="dv">0</span> <span class="dt">Leaf</span> x <span class="dt">Leaf</span>
+insert x t<span class="fu">@</span>(<span class="dt">Node</span> h l a r) <span class="fu">=</span>
+  <span class="kw">if</span> size l <span class="fu">&lt;=</span> size r
+     <span class="kw">then</span> <span class="dt">Node</span> newH (insert x l) a r <span class="co">-- prefer left</span>
+     <span class="kw">else</span> <span class="dt">Node</span> newH l a (insert x r)  <span class="co">-- then right</span>
+       <span class="kw">where</span> newH <span class="fu">=</span> <span class="kw">if</span> totallyBalanced t <span class="kw">then</span> (h<span class="fu">+</span><span class="dv">1</span>) <span class="kw">else</span> h
+
+
+<span class="co">-- Fuck thats not right</span>
+<span class="ot">totallyBalanced ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+totallyBalanced <span class="dt">Leaf</span>                 <span class="fu">=</span> <span class="dt">False</span>
+totallyBalanced (<span class="dt">Node</span> _ <span class="dt">Leaf</span> _ <span class="dt">Leaf</span>) <span class="fu">=</span> <span class="dt">True</span>
+totallyBalanced (<span class="dt">Node</span> _ l _ r)       <span class="fu">=</span> totallyBalanced l <span class="fu">&amp;&amp;</span> totallyBalanced r
+
+<span class="ot">size ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Int</span>
+size <span class="dt">Leaf</span> <span class="fu">=</span> <span class="dv">0</span>
+size (<span class="dt">Node</span> _ l _ r) <span class="fu">=</span> <span class="dv">1</span> <span class="fu">+</span> size l <span class="fu">+</span> size r
+
+<span class="kw">instance</span> <span class="dt">Show</span> a <span class="ot">=&gt;</span> <span class="dt">Show</span> (<span class="dt">Tree</span> a) <span class="kw">where</span>
+  show <span class="dt">Leaf</span> <span class="fu">=</span> <span class="st">&quot;_&quot;</span>
+  <span class="co">--show (Node h Leaf a Leaf) = replicate h &#39; &#39; ++ show h ++ &quot; - &quot; ++ show a</span>
+  show (<span class="dt">Node</span> h l a r) <span class="fu">=</span>
+       show l
+    <span class="fu">++</span> <span class="st">&quot;\n&quot;</span>
+    <span class="fu">++</span> replicate ((h<span class="fu">+</span><span class="dv">1</span>)<span class="fu">*</span><span class="dv">2</span>) <span class="ch">&#39; &#39;</span> <span class="fu">++</span> show h <span class="fu">++</span> <span class="st">&quot; - &quot;</span> <span class="fu">++</span> show a
+    <span class="fu">++</span> <span class="st">&quot;\n&quot;</span>
+    <span class="fu">++</span> show r
+
+<span class="co">-- Exercise 3 : More folds!</span>
+<span class="co">-- 1.  Implement a function xor :: [Bool] -&gt; Bool which returns</span>
+<span class="co">-- True if and only if there are an odd number of True</span>
+<span class="co">-- values contained in the input list. It does not matter how many</span>
+<span class="co">-- False values the input list contains. For example,</span>
+<span class="co">-- xor [False, True, False] == True</span>
+<span class="co">-- xor [False, True, False, False, True] == False</span>
+<span class="co">-- Your solution must be implemented using a fold.</span>
+<span class="ot">xor&#39;&#39; ::</span> [<span class="dt">Bool</span>] <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+xor&#39;&#39; <span class="fu">=</span> odd <span class="fu">.</span> length <span class="fu">.</span> filter id
+
+<span class="ot">xor ::</span> [<span class="dt">Bool</span>] <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+xor <span class="fu">=</span> foldr go <span class="dt">False</span>
+  <span class="kw">where</span> go <span class="dt">False</span> <span class="dt">True</span> <span class="fu">=</span> <span class="dt">True</span>
+        go <span class="dt">True</span> <span class="dt">False</span> <span class="fu">=</span> <span class="dt">True</span>
+        go _ _        <span class="fu">=</span> <span class="dt">False</span>
+
+<span class="co">-- 2.  Implement map as a fold. That is, complete the definition</span>
+<span class="co">-- map’ :: (a -&gt; b) -&gt; [a] -&gt; [b]</span>
+<span class="co">-- map’ f = foldr ...</span>
+<span class="co">-- in such a way that map’ behaves identically to the standard</span>
+<span class="co">-- map function.</span>
+<span class="ot">map&#39; ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
+map&#39; f <span class="fu">=</span> foldr (\x ys <span class="ot">-&gt;</span> f x <span class="fu">:</span> ys) []
+
+<span class="co">-- 3 .  (Optional) Implement foldl using foldr. That is, complete the definition</span>
+<span class="co">-- myFoldl :: (a -&gt; b -&gt; a) -&gt; a -&gt; [b] -&gt; a</span>
+<span class="co">-- myFoldl f base xs = foldr ...</span>
+<span class="co">-- in such a way that myFoldl behaves identically to the standard foldl function.</span>
+<span class="co">-- Hint: Study how the application of foldr and foldl work out:</span>
+<span class="co">-- foldr f z [x1, x2, ..., xn] == x1 ‘f‘ (x2 ‘f‘ ... (xn ‘f‘ z)...)</span>
+<span class="co">-- foldl f z [x1, x2, ..., xn] == (...((z ‘f‘ x1) ‘f‘ x2) ‘f‘...) ‘f‘ xn</span>
+<span class="ot">foldl&#39; ::</span> (b <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> b
+foldl&#39; f z <span class="fu">=</span> foldr (flip f) z <span class="fu">.</span> reverse
+
+<span class="co">-- Exercise 4 : Finding primes</span>
+<span class="co">-- Read about the Sieve of Sundaram.</span>
+<span class="co">-- Implement the algorithm using function composition. Given an integer n,</span>
+<span class="co">-- your function should generate all the odd prime numbers up to 2 n + 2.</span>
+<span class="co">-- sieveSundaram :: Integer -&gt; [Integer]</span>
+<span class="co">-- sieveSundaram = ...</span>
+<span class="co">-- To give you some help, below is a function to compute the</span>
+<span class="co">-- Cartesian product of two lists. This is similar to zip, but it produces all</span>
+<span class="co">-- possible pairs instead of matching up the list elements. For example,</span>
+<span class="co">-- cartProd [1,2] [’a’,’b’] == [(1,’a’),(1,’b’),(2,’a’),(2,’b’)]</span>
+<span class="co">-- It’s written using a list comprehension, which we haven’t talked about</span>
+<span class="co">-- in class (but feel free to research them).</span>
+<span class="ot">cartProd ::</span> [a] <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> [(a, b)]
+cartProd xs ys <span class="fu">=</span> [(x,y) <span class="fu">|</span> x <span class="ot">&lt;-</span> xs, y <span class="ot">&lt;-</span> ys]
+
+<span class="ot">sieveSundaram ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> [<span class="dt">Integer</span>]
+sieveSundaram n <span class="fu">=</span> map ((<span class="fu">+</span><span class="dv">1</span>) <span class="fu">.</span> (<span class="fu">*</span><span class="dv">2</span>)) <span class="fu">$</span> filter sieve [<span class="dv">1</span><span class="fu">..</span>n]
+  <span class="kw">where</span> sieve <span class="fu">=</span> not <span class="fu">.</span> (<span class="ot">`elem`</span> filter (<span class="fu">&lt;=</span>n) [i <span class="fu">+</span> j <span class="fu">+</span> <span class="dv">2</span><span class="fu">*</span>i<span class="fu">*</span>j <span class="fu">|</span> j <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="fu">..</span>n], i <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="fu">..</span>j]])</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Intro</span> <span class="kw">where</span>
+
+<span class="co">-- Exercise 1</span>
+
+<span class="ot">toDigits ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> [<span class="dt">Integer</span>]
+toDigits num <span class="fu">=</span> snd <span class="fu">$</span> go num []
+  <span class="kw">where</span> go x ds
+          <span class="fu">|</span> x <span class="fu">&lt;=</span> <span class="dv">0</span>    <span class="fu">=</span> (<span class="dv">0</span>, [])
+          <span class="fu">|</span> x <span class="fu">&lt;</span> <span class="dv">10</span>    <span class="fu">=</span> (<span class="dv">0</span>, x<span class="fu">:</span>ds)
+          <span class="fu">|</span> otherwise <span class="fu">=</span> go (x <span class="ot">`div`</span> <span class="dv">10</span>) ((x <span class="ot">`mod`</span> <span class="dv">10</span>)<span class="fu">:</span>ds)
+
+
+<span class="ot">toDigitsRev ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> [<span class="dt">Integer</span>]
+toDigitsRev <span class="fu">=</span> reverse <span class="fu">.</span> toDigits
+
+<span class="co">-- Exercise 2</span>
+
+<span class="ot">doubleEveryOther ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> [<span class="dt">Integer</span>]
+doubleEveryOther ds <span class="fu">=</span> reverse <span class="fu">$</span> map go <span class="fu">$</span> zip [<span class="dv">0</span><span class="fu">..</span>] <span class="fu">$</span> reverse ds
+  <span class="kw">where</span> go (i,d) <span class="fu">=</span> <span class="kw">if</span> i <span class="ot">`mod`</span> <span class="dv">2</span> <span class="fu">==</span> <span class="dv">0</span> <span class="kw">then</span> d <span class="kw">else</span> d <span class="fu">*</span> <span class="dv">2</span>
+
+<span class="co">-- Exercise 3</span>
+
+<span class="ot">sumDigits ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> <span class="dt">Integer</span>
+sumDigits <span class="fu">=</span> sum <span class="fu">.</span> concatMap toDigits
+
+<span class="co">-- Exercise 4</span>
+
+<span class="ot">validate ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+validate card <span class="fu">=</span> sumcheck <span class="ot">`mod`</span> <span class="dv">10</span> <span class="fu">==</span> <span class="dv">0</span>
+  <span class="kw">where</span> sumcheck <span class="fu">=</span> sumDigits <span class="fu">.</span> doubleEveryOther <span class="fu">.</span> toDigits <span class="fu">$</span> card
+
+<span class="co">-- Exercise 5</span>
+
+<span class="kw">type</span> <span class="dt">Peg</span> <span class="fu">=</span> <span class="dt">String</span>
+<span class="kw">type</span> <span class="dt">Move</span> <span class="fu">=</span> (<span class="dt">Peg</span>, <span class="dt">Peg</span>)
+
+<span class="co">-- | Given the number of discs and names for the three pegs, hanoi</span>
+<span class="co">-- should return a list of moves to be performed to move the stack of</span>
+<span class="co">-- discs from the first peg to the second</span>
+<span class="ot">hanoi ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> [<span class="dt">Move</span>]
+hanoi <span class="dv">0</span> _ _ _ <span class="fu">=</span> []
+hanoi n source dest c <span class="fu">=</span> hanoi (n<span class="fu">-</span><span class="dv">1</span>) source c dest
+             <span class="fu">++</span> [(source,dest)]
+             <span class="fu">++</span> hanoi (n<span class="fu">-</span><span class="dv">1</span>) c dest source
+
+<span class="co">-- Exercise 6</span>
+<span class="ot">hanoi4 ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> <span class="dt">Peg</span> <span class="ot">-&gt;</span> [<span class="dt">Move</span>]
+hanoi4 n source dest c d
+  <span class="fu">|</span> n <span class="fu">&lt;</span> <span class="dv">3</span>     <span class="fu">=</span> hanoi n source dest c <span class="co">-- this problem is the same for n &lt; 3 disks</span>
+  <span class="fu">|</span> otherwise <span class="fu">=</span> hanoi4 (n<span class="fu">-</span><span class="dv">2</span>) source d dest c
+             <span class="fu">++</span> hanoi <span class="dv">2</span> source dest c
+             <span class="fu">++</span> hanoi4 (n<span class="fu">-</span><span class="dv">2</span>) d dest source c</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Log.Analysis</span>
+  ( parseMessage
+  ) <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">Log.Base</span>
+
+<span class="ot">main ::</span> <span class="dt">IO</span> ()
+main <span class="fu">=</span> putStrLn <span class="st">&quot;hi&quot;</span>
+
+<span class="co">-- Exercise 1</span>
+<span class="ot">parseMessage ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">LogMessage</span>
+parseMessage <span class="fu">=</span> parseMWords <span class="fu">.</span> words
+
+<span class="ot">parseMWords ::</span> [<span class="dt">String</span>] <span class="ot">-&gt;</span> <span class="dt">LogMessage</span>
+parseMWords (<span class="st">&quot;I&quot;</span><span class="fu">:</span>t<span class="fu">:</span>msg)   <span class="fu">=</span> <span class="dt">LogMessage</span> <span class="dt">Info</span> (readInt t) <span class="fu">$</span> unwords msg
+parseMWords (<span class="st">&quot;W&quot;</span><span class="fu">:</span>t<span class="fu">:</span>msg)   <span class="fu">=</span> <span class="dt">LogMessage</span> <span class="dt">Warning</span> (readInt t) <span class="fu">$</span> unwords msg
+parseMWords (<span class="st">&quot;E&quot;</span><span class="fu">:</span>l<span class="fu">:</span>t<span class="fu">:</span>msg) <span class="fu">=</span> <span class="dt">LogMessage</span> (<span class="dt">Error</span> <span class="fu">$</span> readInt l) (readInt t) <span class="fu">$</span> unwords msg
+parseMWords msg           <span class="fu">=</span> <span class="dt">Unknown</span> <span class="fu">$</span> unwords msg
+
+readInt<span class="ot"> ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+readInt <span class="fu">=</span> read
+
+<span class="ot">parse ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">LogMessage</span>]
+parse <span class="fu">=</span> (map parseMessage) <span class="fu">.</span> lines
+
+<span class="co">-- Exercise 2</span>
+<span class="co">-- Not worrying about duplicates as it is not clear from exercise description.</span>
+<span class="co">-- We wouldn&#39;t avoid inserting distinct messages only because of their timestamps..</span>
+<span class="co">-- If we do want to exclude, just use equality case in compare</span>
+<span class="ot">insert ::</span> <span class="dt">LogMessage</span> <span class="ot">-&gt;</span> <span class="dt">MessageTree</span> <span class="ot">-&gt;</span> <span class="dt">MessageTree</span>
+insert (<span class="dt">Unknown</span> _) tree            <span class="fu">=</span> tree
+insert msg         <span class="dt">Leaf</span>            <span class="fu">=</span> <span class="dt">Node</span> <span class="dt">Leaf</span> msg <span class="dt">Leaf</span>
+insert (<span class="dt">LogMessage</span> mt ts msg) (<span class="dt">Node</span> left (<span class="dt">LogMessage</span> mtn tn msgn) right) <span class="fu">=</span>
+  <span class="kw">let</span> ins <span class="fu">=</span> <span class="dt">LogMessage</span> mt ts msg
+      center <span class="fu">=</span> <span class="dt">LogMessage</span> mtn tn msgn
+   <span class="kw">in</span> <span class="kw">case</span> compare ts tn <span class="kw">of</span> 
+        <span class="dt">LT</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> (insert ins left) center right
+        _  <span class="ot">-&gt;</span> <span class="dt">Node</span> left center (insert ins right)
+
+<span class="co">-- Exercise 3</span>
+<span class="ot">build ::</span> [<span class="dt">LogMessage</span>] <span class="ot">-&gt;</span> <span class="dt">MessageTree</span>
+build <span class="fu">=</span> foldr insert <span class="dt">Leaf</span>
+
+<span class="co">-- Exercise 4</span>
+<span class="ot">inOrder ::</span> <span class="dt">MessageTree</span> <span class="ot">-&gt;</span> [<span class="dt">LogMessage</span>]
+inOrder <span class="dt">Leaf</span> <span class="fu">=</span> []
+inOrder (<span class="dt">Node</span> l c r) <span class="fu">=</span>
+  (inOrder l) <span class="fu">++</span> [c] <span class="fu">++</span> (inOrder r)
+
+<span class="co">-- Exercise 5</span>
+<span class="ot">whatWentWrong ::</span> [<span class="dt">LogMessage</span>] <span class="ot">-&gt;</span> [<span class="dt">String</span>]
+whatWentWrong <span class="fu">=</span> (map extract) <span class="fu">.</span> (filter severe) <span class="fu">.</span> inOrder <span class="fu">.</span> build
+  <span class="kw">where</span> severe (<span class="dt">LogMessage</span> (<span class="dt">Error</span> n) _ _) <span class="fu">=</span> n <span class="fu">&gt;=</span> <span class="dv">50</span>
+        severe _                          <span class="fu">=</span> <span class="dt">False</span>
+        extract (<span class="dt">LogMessage</span> _ _ msg)      <span class="fu">=</span> msg</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Log.Base</span> <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">Control.Applicative</span>
+
+<span class="kw">data</span> <span class="dt">MessageType</span> <span class="fu">=</span> <span class="dt">Info</span>
+                 <span class="fu">|</span> <span class="dt">Warning</span>
+                 <span class="fu">|</span> <span class="dt">Error</span> <span class="dt">Int</span>
+  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)
+
+<span class="kw">type</span> <span class="dt">TimeStamp</span> <span class="fu">=</span> <span class="dt">Int</span>
+
+<span class="kw">data</span> <span class="dt">LogMessage</span> <span class="fu">=</span> <span class="dt">LogMessage</span> <span class="dt">MessageType</span> <span class="dt">TimeStamp</span> <span class="dt">String</span>
+                <span class="fu">|</span> <span class="dt">Unknown</span> <span class="dt">String</span>
+  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)
+
+<span class="kw">data</span> <span class="dt">MessageTree</span> <span class="fu">=</span> <span class="dt">Leaf</span>
+                 <span class="fu">|</span> <span class="dt">Node</span> <span class="dt">MessageTree</span> <span class="dt">LogMessage</span> <span class="dt">MessageTree</span>
+  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)
+
+<span class="co">-- | @testParse p n f@ tests the log file parser @p@ by running it</span>
+<span class="co">--   on the first @n@ lines of file @f@.</span>
+<span class="ot">testParse ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">LogMessage</span>])
+          <span class="ot">-&gt;</span> <span class="dt">Int</span>
+          <span class="ot">-&gt;</span> FilePath
+          <span class="ot">-&gt;</span> <span class="dt">IO</span> [<span class="dt">LogMessage</span>]
+testParse parse n file <span class="fu">=</span> take n <span class="fu">.</span> parse <span class="fu">&lt;$&gt;</span> readFile file
+
+<span class="co">-- | @testWhatWentWrong p w f@ tests the log file parser @p@ and</span>
+<span class="co">--   warning message extractor @w@ by running them on the log file</span>
+<span class="co">--   @f@.</span>
+<span class="ot">testWhatWentWrong ::</span> (<span class="dt">String</span> <span class="ot">-&gt;</span> [<span class="dt">LogMessage</span>])
+                  <span class="ot">-&gt;</span> ([<span class="dt">LogMessage</span>] <span class="ot">-&gt;</span> [<span class="dt">String</span>])
+                  <span class="ot">-&gt;</span> FilePath
+                  <span class="ot">-&gt;</span> <span class="dt">IO</span> [<span class="dt">String</span>]
+testWhatWentWrong parse whatWentWrong file
+  <span class="fu">=</span> whatWentWrong <span class="fu">.</span> parse <span class="fu">&lt;$&gt;</span> readFile file</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Golf</span> <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">Data.Monoid</span>
+
+<span class="co">-- Exercise 1 Hopscotch</span>
+
+<span class="co">-- | &#39;skips&#39; maps a function &#39;fn&#39; over an array of integers 1,..,n</span>
+<span class="co">-- where n is the length of the input &#39;xs&#39;.</span>
+<span class="co">-- The mapping function &#39;fn&#39; references an indexed version of &#39;xs&#39;: [(1,x_1), (2,x_2), ..., (n,x_n)]</span>
+<span class="co">-- and for a given integer i, filters this indexed list to only include elements with an</span>
+<span class="co">-- index divisible by i: [(i,x_i),(i*2, x_{i*2}),...]. Then &#39;fn&#39; performs a simple map</span>
+<span class="co">-- to get the second element of each tuple, resulting in [x_i,x_{i*2},...]. This is precisely</span>
+<span class="co">-- the desired i-th element in the exercise description.</span>
+<span class="co">{-</span>
+<span class="co">-- First iteration</span>
+<span class="co">skips :: [a] -&gt; [[a]]</span>
+<span class="co">skips xs = map fn [1..length xs]</span>
+<span class="co">  where</span>
+<span class="co">    fn n = map snd $</span>
+<span class="co">      filter (\(i,_) -&gt; mod i n == 0) nxs</span>
+<span class="co">    nxs = zip [1..] xs</span>
+<span class="co">-}</span>
+<span class="co">{-</span>
+<span class="co">-- List comprehensions for less characters</span>
+<span class="co">skips :: [a] -&gt; [[a]]</span>
+<span class="co">skips xs = map fn [1..length xs]</span>
+<span class="co">  where</span>
+<span class="co">    fn n = [ x | (i,x) &lt;- zip [1..] xs, mod i n == 0]</span>
+<span class="co">-}</span>
+<span class="co">-- Anonymous function for less characters</span>
+<span class="ot">skips ::</span> [a] <span class="ot">-&gt;</span> [[a]]
+skips xs <span class="fu">=</span> map
+  (\n <span class="ot">-&gt;</span> [ x <span class="fu">|</span> (i,x) <span class="ot">&lt;-</span> zip [<span class="dv">1</span><span class="fu">..</span>] xs, mod i n <span class="fu">==</span> <span class="dv">0</span>])
+  [<span class="dv">1</span><span class="fu">..</span>length xs]
+
+<span class="co">-- Exercise 2 Local maxima</span>
+
+<span class="co">-- | Inner folding function basically cycles through list in groups of three.</span>
+<span class="co">-- Nothing represents the start of list. Since we traverse from left to right, that is</span>
+<span class="co">-- \z (x,y,ms) -&gt; (y,z,ms), we should never encounter (Just x, Nothing, ms), which</span>
+<span class="co">-- is the second pattern match below. I could shave off characters by leaving the partial</span>
+<span class="co">-- function..</span>
+<span class="ot">localMaxima ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> [<span class="dt">Integer</span>]
+localMaxima <span class="fu">=</span> thrd <span class="fu">.</span> foldr lM&#39; (<span class="dt">Nothing</span>,<span class="dt">Nothing</span>,[])
+  <span class="kw">where</span>
+    lM&#39; z (<span class="dt">Nothing</span>, y, ms)         <span class="fu">=</span> (y,       <span class="dt">Just</span> z, ms)
+    lM&#39; z (_, <span class="dt">Nothing</span>, ms)         <span class="fu">=</span> (<span class="dt">Nothing</span>, <span class="dt">Just</span> z, ms)
+    lM&#39; z ((<span class="dt">Just</span> x), (<span class="dt">Just</span> y), ms) <span class="fu">=</span>
+      (<span class="dt">Just</span> y, <span class="dt">Just</span> z, <span class="kw">if</span> x <span class="fu">&lt;</span> y <span class="fu">&amp;&amp;</span> y <span class="fu">&gt;</span> z <span class="kw">then</span> y<span class="fu">:</span>ms <span class="kw">else</span> ms)
+
+<span class="ot">thrd ::</span> (a,b,c) <span class="ot">-&gt;</span> c
+thrd (_,_,c) <span class="fu">=</span> c
+
+<span class="co">-- Exercise 3 Histogram</span>
+
+<span class="kw">newtype</span> <span class="dt">Map</span> k v <span class="fu">=</span> <span class="dt">Map</span> {<span class="ot"> mkMap ::</span> [(k,v)] } <span class="kw">deriving</span> (<span class="dt">Eq</span>,<span class="dt">Show</span>)
+<span class="kw">instance</span> (<span class="dt">Eq</span> k, <span class="dt">Monoid</span> v) <span class="ot">=&gt;</span> <span class="dt">Monoid</span> (<span class="dt">Map</span> k v) <span class="kw">where</span>
+  mempty <span class="fu">=</span> <span class="dt">Map</span> []
+  mappend (<span class="dt">Map</span> xs) (<span class="dt">Map</span> ys) <span class="fu">=</span> foldr cons (<span class="dt">Map</span> ys) xs
+
+<span class="kw">instance</span> <span class="dt">Foldable</span> (<span class="dt">Map</span> k) <span class="kw">where</span>
+  foldMap toM (<span class="dt">Map</span> xs) <span class="fu">=</span> mconcat <span class="fu">$</span> map (toM <span class="fu">.</span> snd) xs
+
+<span class="ot">cons ::</span> (<span class="dt">Monoid</span> v, <span class="dt">Eq</span> k) <span class="ot">=&gt;</span> (k, v) <span class="ot">-&gt;</span> <span class="dt">Map</span> k v <span class="ot">-&gt;</span> <span class="dt">Map</span> k v
+cons (k,v) (<span class="dt">Map</span> xs) <span class="fu">=</span> <span class="dt">Map</span> <span class="fu">$</span> maybe
+  ((k,v) <span class="fu">:</span> xs)
+  (\t <span class="ot">-&gt;</span> (k, v <span class="fu">&lt;&gt;</span> t) <span class="fu">:</span> filter ((<span class="fu">/=</span>k) <span class="fu">.</span> fst) xs)
+  (lookup k xs)
+
+<span class="ot">max&#39; ::</span> (<span class="dt">Foldable</span> t, <span class="dt">Ord</span> x, <span class="dt">Num</span> x) <span class="ot">=&gt;</span> t x <span class="ot">-&gt;</span> x
+max&#39; xs <span class="fu">=</span> <span class="kw">if</span> null xs <span class="kw">then</span> <span class="dv">0</span> <span class="kw">else</span> maximum xs
+
+<span class="ot">lookup&#39; ::</span> <span class="dt">Eq</span> a <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Map</span> a b <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b
+lookup&#39; i (<span class="dt">Map</span> xs) <span class="fu">=</span> lookup i xs
+
+<span class="ot">histogram ::</span> [<span class="dt">Integer</span>] <span class="ot">-&gt;</span> <span class="dt">String</span>
+histogram <span class="fu">=</span> fmt <span class="fu">.</span> foldr (\x ms <span class="ot">-&gt;</span> (x,<span class="dv">1</span>) <span class="ot">`cons`</span> ms) (<span class="dt">Map</span> [])
+
+<span class="ot">fmt ::</span> <span class="dt">Map</span> <span class="dt">Integer</span> (<span class="dt">Sum</span> <span class="dt">Integer</span>) <span class="ot">-&gt;</span> <span class="dt">String</span>
+fmt xs <span class="fu">=</span> unlines <span class="fu">$</span> bars xs
+  <span class="fu">++</span> [ replicate <span class="dv">10</span> <span class="ch">&#39;=&#39;</span>
+     , [<span class="ch">&#39;0&#39;</span><span class="fu">..</span><span class="ch">&#39;9&#39;</span>] ]
+
+<span class="ot">bars ::</span> <span class="dt">Map</span> <span class="dt">Integer</span> (<span class="dt">Sum</span> <span class="dt">Integer</span>) <span class="ot">-&gt;</span> [<span class="dt">String</span>]
+bars gs <span class="fu">=</span> reverse <span class="fu">$</span> map
+  (\ln <span class="ot">-&gt;</span> map (\i <span class="ot">-&gt;</span> maybe <span class="ch">&#39; &#39;</span> (\l <span class="ot">-&gt;</span> <span class="kw">if</span> (getSum l) <span class="fu">&gt;=</span> ln <span class="kw">then</span> <span class="ch">&#39;*&#39;</span> <span class="kw">else</span> <span class="ch">&#39; &#39;</span>) <span class="fu">$</span> lookup&#39; i gs) [<span class="dv">0</span><span class="fu">..</span><span class="dv">9</span>])
+  [<span class="dv">1</span><span class="fu">..</span>getSum <span class="fu">$</span> max&#39; gs]</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}</span>
+<span class="kw">module</span> <span class="dt">Calc</span> <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">ExprT</span>
+<span class="kw">import </span><span class="dt">Parser</span>
+<span class="kw">import qualified</span> <span class="dt">StackVM</span> <span class="kw">as</span> <span class="dt">VM</span>
+
+<span class="co">-- Exercise 1</span>
+<span class="co">-- Write Version 1 of the calculator: an evaluator for</span>
+<span class="co">-- ExprT, with the signature</span>
+<span class="co">-- eval :: ExprT -&gt; Integer</span>
+<span class="co">-- For example,</span>
+<span class="co">-- eval (Mul (Add (Lit 2) (Lit 3)) (Lit 4)) == 20.</span>
+
+<span class="ot">eval ::</span> <span class="dt">ExprT</span> <span class="ot">-&gt;</span> <span class="dt">Integer</span>
+eval (<span class="dt">Lit</span> n) <span class="fu">=</span> n
+eval (<span class="dt">Add</span> e1 e2) <span class="fu">=</span> eval e1 <span class="fu">+</span> eval e2
+eval (<span class="dt">Mul</span> e1 e2) <span class="fu">=</span> eval e1 <span class="fu">*</span> eval e2
+
+<span class="co">-- Exercise 2</span>
+<span class="co">-- The UI department has internalized the focus group data and is</span>
+<span class="co">-- ready to synergize with you. They have developed the front-facing</span>
+<span class="co">-- user-interface: a parser that handles the textual representation of the</span>
+<span class="co">-- selected language. They have sent you the module Parser.hs, which</span>
+<span class="co">-- exports parseExp, a parser for arithmetic expressions. If you pass</span>
+<span class="co">-- the constructors of ExprT to it as arguments, it will convert Strings</span>
+<span class="co">-- representing arithmetic expressions into values of type ExprT. For example:</span>
+<span class="co">--</span>
+<span class="co">-- Calc&gt; parseExp Lit Add Mul &quot;(2+3)*4&quot;</span>
+<span class="co">-- Just (Mul (Add (Lit 2) (Lit 3)) (Lit 4))</span>
+<span class="co">-- Calc&gt; parseExp Lit Add Mul &quot;2+3*4&quot;</span>
+<span class="co">-- Just (Add (Lit 2) (Mul (Lit 3) (Lit 4)))</span>
+<span class="co">-- Calc&gt; parseExp Lit Add Mul &quot;2+3*&quot;</span>
+<span class="co">-- Nothing</span>
+<span class="co">--</span>
+<span class="co">-- Leverage the assets of the UI team to implement the value-added function</span>
+<span class="co">-- evalStr :: String -&gt; Maybe Integer</span>
+<span class="ot">evalStr ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Integer</span>
+evalStr <span class="fu">=</span> fmap eval <span class="fu">.</span> parseExp <span class="dt">Lit</span> <span class="dt">Add</span> <span class="dt">Mul</span>
+
+<span class="co">-- Exercise 3</span>
+<span class="co">-- Create a type class called Expr with three methods called lit, add,</span>
+<span class="co">-- and mul which parallel the constructors of ExprT. Make an instance of</span>
+<span class="co">-- Expr for the ExprT type, in such a way that</span>
+<span class="co">-- mul (add (lit 2) (lit 3)) (lit 4) :: ExprT</span>
+<span class="co">--   == Mul (Add (Lit 2) (Lit 3)) (Lit 4)</span>
+<span class="kw">class</span> <span class="dt">Expr</span> e <span class="kw">where</span>
+<span class="ot">  lit ::</span> <span class="dt">Integer</span> <span class="ot">-&gt;</span> e
+<span class="ot">  add ::</span> e <span class="ot">-&gt;</span> e <span class="ot">-&gt;</span> e
+<span class="ot">  mul ::</span> e <span class="ot">-&gt;</span> e <span class="ot">-&gt;</span> e
+
+<span class="kw">instance</span> <span class="dt">Expr</span> <span class="dt">ExprT</span> <span class="kw">where</span>
+  lit <span class="fu">=</span> <span class="dt">Lit</span>
+  add <span class="fu">=</span> <span class="dt">Add</span>
+  mul <span class="fu">=</span> <span class="dt">Mul</span>
+
+<span class="co">-- Exercise 4</span>
+<span class="co">-- Make instances of Expr for each of the following types:</span>
+<span class="co">-- • Integer — works like the original calculator</span>
+<span class="co">-- • Bool — every literal value less than or equal to 0 is interpreted</span>
+<span class="co">--   as False, and all positive Integers are interpreted as True;</span>
+<span class="co">--   “addition” is logical or, “multiplication” is logical and</span>
+<span class="co">-- • MinMax — “addition” is taken to be the max function, while</span>
+<span class="co">--   “multiplication” is the min function</span>
+<span class="co">-- • Mod7 — all values should be in the ranage 0 . . . 6, and</span>
+<span class="co">--   all arithmetic is done modulo 7; for example, 5 + 3 = 1.</span>
+<span class="kw">instance</span> <span class="dt">Expr</span> <span class="dt">Integer</span> <span class="kw">where</span>
+  lit <span class="fu">=</span> id
+  add <span class="fu">=</span> (<span class="fu">+</span>)
+  mul <span class="fu">=</span> (<span class="fu">*</span>)
+
+<span class="kw">instance</span> <span class="dt">Expr</span> <span class="dt">Bool</span> <span class="kw">where</span>
+  lit <span class="fu">=</span> (<span class="fu">&gt;</span><span class="dv">0</span>)
+  add <span class="fu">=</span> (<span class="fu">&amp;&amp;</span>)
+  mul <span class="fu">=</span> (<span class="fu">||</span>)
+
+<span class="kw">newtype</span> <span class="dt">MinMax</span> <span class="fu">=</span> <span class="dt">MinMax</span> <span class="dt">Integer</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)
+<span class="kw">instance</span> <span class="dt">Expr</span> <span class="dt">MinMax</span> <span class="kw">where</span>
+  lit <span class="fu">=</span> <span class="dt">MinMax</span>
+  add (<span class="dt">MinMax</span> a) (<span class="dt">MinMax</span> b) <span class="fu">=</span> <span class="dt">MinMax</span> (a <span class="fu">+</span> b)
+  mul (<span class="dt">MinMax</span> a) (<span class="dt">MinMax</span> b) <span class="fu">=</span> <span class="dt">MinMax</span> (a <span class="fu">*</span> b)
+
+<span class="kw">newtype</span> <span class="dt">Mod7</span> <span class="fu">=</span> <span class="dt">Mod7</span> <span class="dt">Integer</span> <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>)
+<span class="kw">instance</span> <span class="dt">Expr</span> <span class="dt">Mod7</span> <span class="kw">where</span>
+  lit <span class="fu">=</span> <span class="dt">Mod7</span> <span class="fu">.</span> (<span class="ot">`mod`</span> <span class="dv">7</span>)
+  add (<span class="dt">Mod7</span> a) (<span class="dt">Mod7</span> b) <span class="fu">=</span> <span class="dt">Mod7</span> <span class="fu">$</span> (a <span class="fu">+</span> b) <span class="ot">`mod`</span> <span class="dv">7</span>
+  mul (<span class="dt">Mod7</span> a) (<span class="dt">Mod7</span> b) <span class="fu">=</span> <span class="dt">Mod7</span> <span class="fu">$</span> (a <span class="fu">*</span> b) <span class="ot">`mod`</span> <span class="dv">7</span>
+
+<span class="co">-- Exercise 5</span>
+<span class="co">-- Write a version of your calculator that will emit assembly language for the</span>
+<span class="co">-- new processor. The CPU supports six operations, as embodied in the StackExp data type:</span>
+<span class="co">-- data StackExp = PushI Integer</span>
+<span class="co">--               | PushB Bool</span>
+<span class="co">--               | Add</span>
+<span class="co">--               | Mul</span>
+<span class="co">--               | And</span>
+<span class="co">--               | Or</span>
+<span class="co">--               deriving Show</span>
+<span class="co">-- type Program = [StackExp]</span>
+<span class="co">-- PushI and PushB push values onto the top of the stack, which can</span>
+<span class="co">-- store both Integer and Bool values. Add, Mul, And, and Or each pop</span>
+<span class="co">-- the top two items off the top of the stack, perform the appropriate</span>
+<span class="co">-- operation, and push the result back onto the top of the stack. For</span>
+<span class="co">-- example, executing the program</span>
+<span class="co">-- [PushB True, PushI 3, PushI 6, Mul]</span>
+<span class="co">-- will result in a stack holding True on the bottom, and 18 on top of that.</span>
+<span class="co">-- If there are not enough operands on top of the stack, or if an operation</span>
+<span class="co">-- is performed on operands of the wrong type, the processor</span>
+<span class="co">-- will melt into a puddle of silicon goo. For a more precise specification</span>
+<span class="co">-- of the capabilities and behavior of the custom CPU, consult the</span>
+<span class="co">-- reference implementation provided in StackVM.hs.</span>
+<span class="co">-- Your task is to implement a compiler for arithmetic expressions.</span>
+<span class="co">-- Simply create an instance of the Expr type class for Program, so that</span>
+<span class="co">-- arithmetic expressions can be interpreted as compiled programs. For</span>
+<span class="co">-- any arithmetic expression exp :: Expr a =&gt; a it should be the case that</span>
+<span class="co">-- stackVM exp == Right [IVal exp]</span>
+<span class="co">-- Note that in order to make an instance for Program (which is a</span>
+<span class="co">-- type synonym) you will need to enable the TypeSynonymInstances</span>
+<span class="co">-- language extension. Then write the function</span>
+<span class="co">-- compile :: String -&gt; Maybe Program</span>
+<span class="co">-- which takes Strings representing arithmetic expressions and compiles</span>
+<span class="co">-- them into programs that can be run on the custom CPU.</span>
+
+<span class="kw">instance</span> <span class="dt">Expr</span> <span class="dt">VM.Program</span> <span class="kw">where</span>
+  lit n <span class="fu">=</span> [<span class="dt">VM.PushI</span> n]
+  add e1 e2 <span class="fu">=</span> e2 <span class="fu">++</span> e1 <span class="fu">++</span> [<span class="dt">VM.Add</span>]
+  mul e1 e2 <span class="fu">=</span> e2 <span class="fu">++</span> e1 <span class="fu">++</span> [<span class="dt">VM.Mul</span>]
+
+<span class="ot">compile ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">VM.Program</span>
+compile <span class="fu">=</span> parseExp lit add mul</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">ExprT</span> <span class="kw">where</span>
+
+<span class="kw">data</span> <span class="dt">ExprT</span> <span class="fu">=</span> <span class="dt">Lit</span> <span class="dt">Integer</span>
+           <span class="fu">|</span> <span class="dt">Add</span> <span class="dt">ExprT</span> <span class="dt">ExprT</span>
+           <span class="fu">|</span> <span class="dt">Mul</span> <span class="dt">ExprT</span> <span class="dt">ExprT</span>
+  <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Applicative parser for infix arithmetic expressions without any</span>
+<span class="co">-- dependency on hackage. Builds an explicit representation of the</span>
+<span class="co">-- syntax tree to fold over using client-supplied semantics.</span>
+<span class="kw">module</span> <span class="dt">Parser</span> (parseExp) <span class="kw">where</span>
+<span class="kw">import </span><span class="dt">Control.Applicative</span> <span class="kw">hiding</span> (<span class="dt">Const</span>)
+<span class="kw">import </span><span class="dt">Control.Arrow</span>
+<span class="kw">import </span><span class="dt">Data.Char</span>
+<span class="kw">import </span><span class="dt">Data.Monoid</span>
+<span class="kw">import </span><span class="dt">Data.List</span> (foldl&#39;)
+
+<span class="co">-- Building block of a computation with some state of type @s@</span>
+<span class="co">-- threaded through it, possibly resulting in a value of type @r@</span>
+<span class="co">-- along with some updated state.</span>
+<span class="kw">newtype</span> <span class="dt">State</span> s r <span class="fu">=</span> <span class="dt">State</span> (s <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (r, s))
+
+<span class="co">-- Expressions</span>
+<span class="kw">data</span> <span class="dt">Expr</span> <span class="fu">=</span> <span class="dt">Const</span> <span class="dt">Integer</span>
+          <span class="fu">|</span> <span class="dt">Add</span> <span class="dt">Expr</span> <span class="dt">Expr</span>
+          <span class="fu">|</span> <span class="dt">Mul</span> <span class="dt">Expr</span> <span class="dt">Expr</span>
+            <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+    fmap f (<span class="dt">State</span> g) <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> fmap (first f) <span class="fu">.</span> g
+
+<span class="kw">instance</span> <span class="dt">Applicative</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+    pure x <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> <span class="dt">Just</span> (x, s)
+    <span class="dt">State</span> f <span class="fu">&lt;*&gt;</span> <span class="dt">State</span> g <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span>
+                          <span class="kw">case</span> f s <span class="kw">of</span>
+                            <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+                            <span class="dt">Just</span> (r, s&#39;) <span class="ot">-&gt;</span> fmap (first r) <span class="fu">.</span> g <span class="fu">$</span> s&#39;
+
+<span class="kw">instance</span> <span class="dt">Alternative</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+    empty <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> const <span class="dt">Nothing</span>
+    <span class="dt">State</span> f <span class="fu">&lt;|&gt;</span> <span class="dt">State</span> g <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> maybe (g s) <span class="dt">Just</span> (f s)
+
+<span class="co">-- A parser threads some &#39;String&#39; state through a computation that</span>
+<span class="co">-- produces some value of type @a@.</span>
+<span class="kw">type</span> <span class="dt">Parser</span> a <span class="fu">=</span> <span class="dt">State</span> <span class="dt">String</span> a
+
+<span class="co">-- Parse one numerical digit.</span>
+<span class="ot">digit ::</span> <span class="dt">Parser</span> <span class="dt">Integer</span>
+digit <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> parseDigit
+    <span class="kw">where</span> parseDigit [] <span class="fu">=</span> <span class="dt">Nothing</span>
+          parseDigit s<span class="fu">@</span>(c<span class="fu">:</span>cs)
+              <span class="fu">|</span> isDigit c <span class="fu">=</span> <span class="dt">Just</span> (fromIntegral <span class="fu">$</span> digitToInt c, cs)
+              <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="co">-- Parse an integer. The integer may be prefixed with a negative sign.</span>
+<span class="ot">num ::</span> <span class="dt">Parser</span> <span class="dt">Integer</span>
+num <span class="fu">=</span> maybe id (const negate) <span class="fu">&lt;$&gt;</span> optional (char <span class="ch">&#39;-&#39;</span>) <span class="fu">&lt;*&gt;</span> (toInteger <span class="fu">&lt;$&gt;</span> some digit)
+    <span class="kw">where</span> toInteger <span class="fu">=</span> foldl&#39; ((<span class="fu">+</span>) <span class="fu">.</span> (<span class="fu">*</span> <span class="dv">10</span>)) <span class="dv">0</span>
+
+<span class="co">-- Parse a single white space character.</span>
+<span class="ot">space ::</span> <span class="dt">Parser</span> ()
+space <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> parseSpace
+    <span class="kw">where</span> parseSpace [] <span class="fu">=</span> <span class="dt">Nothing</span>
+          parseSpace s<span class="fu">@</span>(c<span class="fu">:</span>cs)
+              <span class="fu">|</span> isSpace c <span class="fu">=</span> <span class="dt">Just</span> ((), cs)
+              <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="co">-- Consume zero or more white space characters.</span>
+<span class="ot">eatSpace ::</span> <span class="dt">Parser</span> ()
+eatSpace <span class="fu">=</span> const () <span class="fu">&lt;$&gt;</span> many space
+
+<span class="co">-- Parse a specific character.</span>
+<span class="ot">char ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Parser</span> <span class="dt">Char</span>
+char c <span class="fu">=</span> <span class="dt">State</span> parseChar
+    <span class="kw">where</span> parseChar [] <span class="fu">=</span> <span class="dt">Nothing</span>
+          parseChar (x<span class="fu">:</span>xs) <span class="fu">|</span> x <span class="fu">==</span> c <span class="fu">=</span> <span class="dt">Just</span> (c, xs)
+                           <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="co">-- Parse one of our two supported operator symbols.</span>
+<span class="ot">op ::</span> <span class="dt">Parser</span> (<span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span> <span class="ot">-&gt;</span> <span class="dt">Expr</span>)
+op <span class="fu">=</span> const <span class="dt">Add</span> <span class="fu">&lt;$&gt;</span> (char <span class="ch">&#39;+&#39;</span>) <span class="fu">&lt;|&gt;</span> const <span class="dt">Mul</span> <span class="fu">&lt;$&gt;</span> (char <span class="ch">&#39;*&#39;</span>)
+
+<span class="co">-- Succeed only if the end of the input has been reached.</span>
+<span class="ot">eof ::</span> <span class="dt">Parser</span> ()
+eof <span class="fu">=</span> <span class="dt">State</span> parseEof
+    <span class="kw">where</span> parseEof [] <span class="fu">=</span> <span class="dt">Just</span> ((),[])
+          parseEof _  <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="co">-- Parse an infix arithmetic expression consisting of integers, plus</span>
+<span class="co">-- signs, multiplication signs, and parentheses.</span>
+<span class="ot">parseExpr ::</span> <span class="dt">Parser</span> <span class="dt">Expr</span>
+parseExpr <span class="fu">=</span> eatSpace <span class="fu">*&gt;</span>
+            ((buildOp <span class="fu">&lt;$&gt;</span> nonOp <span class="fu">&lt;*&gt;</span> (eatSpace <span class="fu">*&gt;</span> op) <span class="fu">&lt;*&gt;</span> parseExpr) <span class="fu">&lt;|&gt;</span> nonOp)
+    <span class="kw">where</span> buildOp x op y <span class="fu">=</span> x <span class="ot">`op`</span> y
+          nonOp <span class="fu">=</span> char <span class="ch">&#39;(&#39;</span> <span class="fu">*&gt;</span> parseExpr <span class="fu">&lt;*</span> char <span class="ch">&#39;)&#39;</span> <span class="fu">&lt;|&gt;</span> <span class="dt">Const</span> <span class="fu">&lt;$&gt;</span> num
+
+<span class="co">-- Run a parser over a &#39;String&#39; returning the parsed value and the</span>
+<span class="co">-- remaining &#39;String&#39; data.</span>
+<span class="ot">execParser ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (a, <span class="dt">String</span>)
+execParser (<span class="dt">State</span> f) <span class="fu">=</span> f
+
+<span class="co">-- Run a parser over a &#39;String&#39; returning the parsed value.</span>
+<span class="ot">evalParser ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a
+evalParser <span class="fu">=</span> (fmap fst <span class="fu">.</span>) <span class="fu">.</span> execParser
+
+<span class="co">-- Parse an arithmetic expression using the supplied semantics for</span>
+<span class="co">-- integral constants, addition, and multiplication.</span>
+<span class="ot">parseExp ::</span> (<span class="dt">Integer</span> <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a
+parseExp con add mul <span class="fu">=</span> (convert <span class="fu">&lt;$&gt;</span>) <span class="fu">.</span> evalParser (parseExpr <span class="fu">&lt;*</span> eof)
+    <span class="kw">where</span> convert (<span class="dt">Const</span> x) <span class="fu">=</span> con x
+          convert (<span class="dt">Add</span> x y) <span class="fu">=</span> add (convert x) (convert y)
+          convert (<span class="dt">Mul</span> x y) <span class="fu">=</span> mul (convert x) (convert y)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">StackVM</span> (<span class="dt">StackVal</span>(<span class="fu">..</span>), <span class="dt">StackExp</span>(<span class="fu">..</span>), <span class="dt">Stack</span>, <span class="dt">Program</span>, stackVM) <span class="kw">where</span>
+
+<span class="co">-- Values that may appear in the stack. Such a value will also be</span>
+<span class="co">-- returned by the stackVM program execution function.</span>
+<span class="kw">data</span> <span class="dt">StackVal</span> <span class="fu">=</span> <span class="dt">IVal</span> <span class="dt">Integer</span> <span class="fu">|</span> <span class="dt">BVal</span> <span class="dt">Bool</span> <span class="fu">|</span> <span class="dt">Void</span> <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="co">-- The various expressions our VM understands.</span>
+<span class="kw">data</span> <span class="dt">StackExp</span> <span class="fu">=</span> <span class="dt">PushI</span> <span class="dt">Integer</span>
+              <span class="fu">|</span> <span class="dt">PushB</span> <span class="dt">Bool</span>
+              <span class="fu">|</span> <span class="dt">Add</span>
+              <span class="fu">|</span> <span class="dt">Mul</span>
+              <span class="fu">|</span> <span class="dt">And</span>
+              <span class="fu">|</span> <span class="dt">Or</span>
+                <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="kw">type</span> <span class="dt">Stack</span>   <span class="fu">=</span> [<span class="dt">StackVal</span>]
+<span class="kw">type</span> <span class="dt">Program</span> <span class="fu">=</span> [<span class="dt">StackExp</span>]
+
+<span class="co">-- Execute the given program. Returns either an error message or the</span>
+<span class="co">-- value on top of the stack after execution.</span>
+<span class="ot">stackVM ::</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> <span class="dt">StackVal</span>
+stackVM <span class="fu">=</span> execute []
+
+<span class="ot">errType ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> a
+errType op <span class="fu">=</span> <span class="dt">Left</span> <span class="fu">$</span> <span class="st">&quot;Encountered &#39;&quot;</span> <span class="fu">++</span> op <span class="fu">++</span> <span class="st">&quot;&#39; opcode with ill-typed stack.&quot;</span>
+
+<span class="ot">errUnderflow ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> a
+errUnderflow op <span class="fu">=</span> <span class="dt">Left</span> <span class="fu">$</span> <span class="st">&quot;Stack underflow with &#39;&quot;</span> <span class="fu">++</span> op <span class="fu">++</span> <span class="st">&quot;&#39; opcode.&quot;</span>
+
+<span class="co">-- Execute a program against a given stack.</span>
+<span class="ot">execute ::</span> <span class="dt">Stack</span> <span class="ot">-&gt;</span> <span class="dt">Program</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> <span class="dt">StackVal</span>
+execute [] []                               <span class="fu">=</span> <span class="dt">Right</span> <span class="dt">Void</span>
+execute (s<span class="fu">:</span>_) []                            <span class="fu">=</span> <span class="dt">Right</span> s
+
+execute s (<span class="dt">PushI</span> x <span class="fu">:</span> xs)                    <span class="fu">=</span> execute (<span class="dt">IVal</span> x <span class="fu">:</span> s) xs
+execute s (<span class="dt">PushB</span> x <span class="fu">:</span> xs)                    <span class="fu">=</span> execute (<span class="dt">BVal</span> x <span class="fu">:</span> s) xs
+
+execute (<span class="dt">IVal</span> s1 <span class="fu">:</span> <span class="dt">IVal</span> s2 <span class="fu">:</span> ss) (<span class="dt">Add</span> <span class="fu">:</span> xs) <span class="fu">=</span> execute (s&#39;<span class="fu">:</span>ss) xs
+    <span class="kw">where</span> s&#39; <span class="fu">=</span> <span class="dt">IVal</span> (s1 <span class="fu">+</span> s2)
+execute (_<span class="fu">:</span>_<span class="fu">:</span>_) (<span class="dt">Add</span><span class="fu">:</span>_)                     <span class="fu">=</span> errType <span class="st">&quot;Add&quot;</span>
+execute _ (<span class="dt">Add</span><span class="fu">:</span>_)                           <span class="fu">=</span> errUnderflow <span class="st">&quot;Add&quot;</span>
+
+execute (<span class="dt">IVal</span> s1<span class="fu">:</span><span class="dt">IVal</span> s2<span class="fu">:</span>ss) (<span class="dt">Mul</span> <span class="fu">:</span> xs)     <span class="fu">=</span> execute (s&#39;<span class="fu">:</span>ss) xs
+    <span class="kw">where</span> s&#39; <span class="fu">=</span> <span class="dt">IVal</span> (s1 <span class="fu">*</span> s2)
+execute (_<span class="fu">:</span>_<span class="fu">:</span>_) (<span class="dt">Mul</span><span class="fu">:</span>_)                     <span class="fu">=</span> errType <span class="st">&quot;Mul&quot;</span>
+execute _ (<span class="dt">Mul</span><span class="fu">:</span>_)                           <span class="fu">=</span> errUnderflow <span class="st">&quot;Mul&quot;</span>
+
+execute (<span class="dt">BVal</span> s1<span class="fu">:</span><span class="dt">BVal</span> s2<span class="fu">:</span>ss) (<span class="dt">And</span> <span class="fu">:</span> xs)     <span class="fu">=</span> execute (s&#39;<span class="fu">:</span>ss) xs
+    <span class="kw">where</span> s&#39; <span class="fu">=</span> <span class="dt">BVal</span> (s1 <span class="fu">&amp;&amp;</span> s2)
+execute (_<span class="fu">:</span>_<span class="fu">:</span>_) (<span class="dt">And</span><span class="fu">:</span>_)                     <span class="fu">=</span> errType <span class="st">&quot;And&quot;</span>
+execute _ (<span class="dt">And</span><span class="fu">:</span>_)                           <span class="fu">=</span> errUnderflow <span class="st">&quot;And&quot;</span>
+
+execute (<span class="dt">BVal</span> s1 <span class="fu">:</span> <span class="dt">BVal</span> s2 <span class="fu">:</span> ss) (<span class="dt">Or</span> <span class="fu">:</span> xs)  <span class="fu">=</span> execute (s&#39;<span class="fu">:</span>ss) xs
+    <span class="kw">where</span> s&#39; <span class="fu">=</span> <span class="dt">BVal</span> (s1 <span class="fu">||</span> s2)
+execute (_<span class="fu">:</span>_<span class="fu">:</span>_) (<span class="dt">Or</span><span class="fu">:</span>_)                      <span class="fu">=</span> errType <span class="st">&quot;Or&quot;</span>
+execute _ (<span class="dt">Or</span><span class="fu">:</span>_)                            <span class="fu">=</span> errUnderflow <span class="st">&quot;Or&quot;</span>
+
+test <span class="fu">=</span> stackVM [<span class="dt">PushI</span> <span class="dv">3</span>, <span class="dt">PushI</span> <span class="dv">5</span>, <span class="dt">Add</span>]</code></pre></div>
+</body>
+</html>

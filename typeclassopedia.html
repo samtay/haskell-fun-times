@@ -1,0 +1,345 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="https://necolas.github.io/normalize.css/latest/normalize.css" type="text/css" />
+  <link rel="stylesheet" href="https://gist.githubusercontent.com/dashed/6714393/raw/ae966d9d0806eb1e24462d88082a0264438adc50/github-pandoc.css" type="text/css" />
+  <link rel="stylesheet" href="/haskell-fun-times/css/custom.css" type="text/css" />
+</head>
+<body>
+<h1 id="typeclassopedia">typeclassopedia</h1>
+<p>This directory contains notes &amp; exercises from the <a href="https://wiki.haskell.org/Typeclassopedia">Typeclassopedia</a>. Thanks <a href="https://github.com/byorgey"><strong>@byorgey</strong></a>!</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- 1. Implement Functor instances for Either e and ((-&gt;) e)</span>
+
+<span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">Either</span> e) <span class="kw">where</span>
+  fmap g (<span class="dt">Left</span> x)  <span class="fu">=</span> <span class="dt">Left</span> x
+  fmap g (<span class="dt">Right</span> y) <span class="fu">=</span> <span class="dt">Right</span> (g y)
+
+<span class="kw">instance</span> <span class="dt">Functor</span> ((<span class="ot">-&gt;</span>) e) <span class="kw">where</span>
+  fmap g f <span class="fu">=</span> g <span class="fu">.</span> f
+<span class="co">--- fmap = (.)</span>
+
+
+<span class="co">--2. Implement Functor instances for ((,) e) and Pair, where</span>
+<span class="kw">data</span> <span class="dt">Pair</span> a <span class="fu">=</span> <span class="dt">Pair</span> a a
+<span class="co">-- and explain their similarities and differences.</span>
+
+<span class="kw">instance</span> <span class="dt">Functor</span> ((,) e) <span class="kw">where</span>
+  fmap g (e, x) <span class="fu">=</span> (e, g x)
+
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Pair</span> <span class="kw">where</span>
+  fmap g (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> (g x) (g y)
+
+<span class="co">-- While these look similar, the difference lies in the values held by each type. Both</span>
+<span class="co">-- are type constructors that accept a single concrete type, however ((,) e) holds</span>
+<span class="co">-- a predefined type (that of e) that is independent of the additional type parameter,</span>
+<span class="co">-- while the &quot;first&quot; data constructor parameter of Pair depends on the type parameter.</span>
+
+
+<span class="co">-- 3. Implement a Functor instance for the type ITree defined as</span>
+<span class="kw">data</span> <span class="dt">ITree</span> a <span class="fu">=</span> <span class="dt">Leaf</span> (<span class="dt">Int</span> <span class="ot">-&gt;</span> a)
+             <span class="fu">|</span> <span class="dt">Node</span> [<span class="dt">ITree</span> a]
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">ITree</span> <span class="kw">where</span>
+  fmap g (<span class="dt">Leaf</span> h)  <span class="fu">=</span> <span class="dt">Leaf</span> (g <span class="fu">.</span> h)
+  fmap g (<span class="dt">Node</span> xs) <span class="fu">=</span> <span class="dt">Node</span> <span class="fu">$</span> map (fmap g) xs
+
+<span class="co">-- 4. Give an example of a type of kind * -&gt; * which cannot be made an instance</span>
+<span class="co">-- of Functor (without using undefined).</span>
+
+<span class="kw">data</span> <span class="dt">Jumble</span> a <span class="fu">=</span> <span class="dt">Jumble</span> (a <span class="ot">-&gt;</span> <span class="dt">String</span>)
+
+<span class="co">-- Jumble cannot be made an instance of Functor because fmap :: (a -&gt; b) -&gt; f a -&gt; f b.</span>
+<span class="co">-- But in this case, notice that f a === Jumble (a -&gt; String). So what would we do with</span>
+<span class="co">-- the inital argument that is a function of type (a -&gt; b) ? We need to end up with a</span>
+<span class="co">-- type of Jumble (b -&gt; String), in other words a function that accepts type b. There&#39;s</span>
+<span class="co">-- no way for us to do this because we aren&#39;t guaranteed an inverse of any of these functions.</span>
+<span class="co">-- NOTE this is like the opposite of ((-&gt;) b), where the type parameter on which Functor</span>
+<span class="co">-- operates is the SECOND parameter.</span>
+<span class="co">-- TODO: Come up with a more coherent explanation of why Functor cannot be implemented for Jumble</span>
+
+
+<span class="co">-- 5. Is this statement true or false?</span>
+<span class="co">-- &gt;&gt; The composition of two Functors is also a Functor</span>
+
+<span class="co">{-- I believe this is true.</span>
+
+<span class="co">Proof: Consider types A and B which are each of kind * -&gt; *. Without loss of generality,</span>
+<span class="co">let us consider the composed type C = B A, which is also of kind * -&gt; *. Since A and B</span>
+<span class="co">are each Functors, we know that for any x,y of indeterminate type,</span>
+<span class="co">fmap f (B x) = B (f x)</span>
+<span class="co">fmap f (A y) = A (f y)</span>
+<span class="co">Therefore we can define fmap for type C as</span>
+<span class="co">fmap f (C z) =</span>
+<span class="co">fmap f (B (A z)) = let (A y) = fmap f (A z)</span>
+<span class="co">                   in (A y) &lt;$ (B z) -- does second parameter matter?</span>
+<span class="co">Notice we only need to fmap f once, to transform (a -&gt; b). The second usage of the Functor class</span>
+<span class="co">is just &lt;$ which is fmap . const, and is just used to take the already fmapped value (in context of A)</span>
+<span class="co">and minimally put it into the context of B.</span>
+<span class="co">Note: This proof sucks.</span>
+<span class="co">--}</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- 1. Although it is not possible for a Functor instance to satisfy the first</span>
+<span class="co">-- Functor law but not the second (excluding undefined), the reverse is</span>
+<span class="co">-- possible. Give an example of a (bogus) Functor instance which satisfies</span>
+<span class="co">-- the second law but not the first.</span>
+
+<span class="kw">data</span> <span class="dt">Pair</span> a <span class="fu">=</span> <span class="dt">Pair</span> <span class="dt">Int</span> a
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Pair</span> <span class="kw">where</span>
+  fmap g (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> <span class="dv">0</span> (g y)
+
+<span class="co">-- Now consider any functions g, h where g :: a -&gt; b and h :: a -&gt; b</span>
+<span class="co">-- fmap (g . h) (Pair x y) = Pair 0 (g . h) y</span>
+<span class="co">--                         = Pair 0 g (h y)</span>
+<span class="co">--                         = fmap g (Pair x h y)</span>
+<span class="co">--                         = fmap g (fmap h (Pair x y))</span>
+<span class="co">--                         = (fmap g) . (fmap h) $ Pair x y</span>
+<span class="co">-- Therefore this instance satisfies the second law. However, it clearly doesn&#39;t</span>
+<span class="co">-- satisfy the first.</span>
+
+<span class="co">-- fmap id (Pair 10 &quot;Oh no!&quot;) = Pair 0 &quot;Oh no!&quot; /= Pair 10 &quot;Oh no!&quot;</span>
+
+
+<span class="co">-- 2. Which laws are violated by the following evil functor instance</span>
+<span class="kw">instance</span> <span class="dt">Functor</span> [] <span class="kw">where</span>
+  fmap _ [] <span class="fu">=</span> []
+  fmap g (x<span class="fu">:</span>xs) <span class="fu">=</span> g x <span class="fu">:</span> g x <span class="fu">:</span> fmap g xs
+<span class="co">-- Both laws. Observe.</span>
+<span class="co">-- fmap id [1] = [1, 1] /= [1]</span>
+<span class="co">-- fmap ((*2) . (*2)) [1] = [1*2*2, 1*2*2] = [4,4]</span>
+<span class="co">-- But when fmap happens twice, the list increases size twice:</span>
+<span class="co">-- fmap (*2) . fmap (*2) $ [1] = fmap (*2) $ [1*2, 1*2]</span>
+<span class="co">--                             = [1*2*2, 1*2*2, 1*2*2, 1*2*2] = [4,4,4,4] /= [4,4]</span></code></pre></div>
+<h1 id="instances">3.2 Instances</h1>
+<p>This section is a showcase of some common functor instances, nothing new after going<br />
+through <em>Learn You a Haskell</em>. I am including the &quot;proof&quot; exercises 4 and 5 because they<br />
+are better suited to markdown.</p>
+<h4 id="give-an-example-of-a-type-of-kind---which-cannot-be-made-an-instance-of-functor-without-using-undefined.">4. Give an example of a type of kind * -&gt; * which cannot be made an instance of Functor (without using undefined).</h4>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Jumble</span> a <span class="fu">=</span> <span class="dt">Jumble</span> (a <span class="ot">-&gt;</span> <span class="dt">String</span>)</code></pre></div>
+<p>Jumble cannot be made an instance of Functor because <code>fmap :: (a -&gt; b) -&gt; f a -&gt; f b</code>,<br />
+and in this case, notice that <code>f a === Jumble (a -&gt; String)</code>. So what would we do with<br />
+the inital argument that is a function of type <code>(a -&gt; b)</code>? We need to end up with a type<br />
+of <code>Jumble (b -&gt; String)</code>, in other words a function that accepts type <code>b</code>. There's no<br />
+way for us to do this because we aren't guaranteed an inverse of any of these functions.<br />
+Note this is like the opposite of <code>((-&gt;) b)</code>, where the type parameter on which Functor<br />
+operates is the <em>second</em> parameter.</p>
+<p>Yeah I know, I'm not satisfied with that explanation either. I found other people who go<br />
+into more detail ([<a href="http://stackoverflow.com/questions/26985562/make-data-type-of-kind-thats-not-a-functor/26986211#26986211">1</a>] [<a href="https://michaelochurch.wordpress.com/2016/01/01/insights-into-why-a-contravariant-type-cant-be-a-haskell-functor/">2</a>]). At least I had the right idea with a function of type <code>a -&gt; b</code>.</p>
+<h4 id="is-this-statement-true-or-false-the-composition-of-two-functors-is-also-a-functor">5. Is this statement true or false: The composition of two Functors is also a Functor</h4>
+<p>I believe this is true.</p>
+<p><strong>Proof</strong>: Consider types <code>A</code> and <code>B</code> which are each of kind <code>* -&gt; *</code>. Without loss of generality,<br />
+let us consider the composed type <code>C = B A</code>, which is also of kind <code>* -&gt; *</code>. Since <code>A</code> and <code>B</code><br />
+are each Functors, we know that for any <code>x</code>,<code>y</code> of indeterminate type,</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">fmap f (<span class="dt">B</span> x) <span class="fu">=</span> <span class="dt">B</span> (f x)
+fmap f (<span class="dt">A</span> y) <span class="fu">=</span> <span class="dt">A</span> (f y)</code></pre></div>
+<p>Therefore we can define <code>fmap</code> for type <code>C</code> as</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">fmap f (<span class="dt">C</span> z) <span class="fu">=</span>
+fmap f (<span class="dt">B</span> (<span class="dt">A</span> z)) <span class="fu">=</span> <span class="kw">let</span> (<span class="dt">A</span> y) <span class="fu">=</span> fmap f (<span class="dt">A</span> z)
+                   <span class="kw">in</span> (<span class="dt">A</span> y) <span class="fu">&lt;$</span> (<span class="dt">B</span> z) <span class="co">-- does second parameter matter?</span></code></pre></div>
+<p>Notice we only need to <code>fmap f</code> once, to transform <code>(a -&gt; b)</code>. The second usage of the Functor class<br />
+is just <code>&lt;$</code> which is <code>fmap . const</code>, and is just used to take the already fmapped value (in context of <code>A</code>)<br />
+and minimally put it into the context of <code>B</code>.<br />
+Note: This proof sucks.</p>
+<h1 id="laws">3.3 Laws</h1>
+<p>While not guaranteed by Haskell itself, functors should satisfy these laws:</p>
+<ol>
+<li><code>fmap id = id</code></li>
+<li><code>fmag (g . h) = (fmap g) . (fmap h)</code></li>
+</ol>
+<p>This ensures that <code>fmap g</code> changes a value without altering its context<br />
+These laws make <code>f</code> and <code>fmap</code> together an endofunctor on Hask, the category<br />
+of Haskell types (ignoring <em>|</em>) <a href="https://en.wikibooks.org/wiki/Haskell/Category_theory">ref</a>.</p>
+<p><strong>Theorem 3.3.1</strong>: A given type has at most <em>one</em> valid instance of Functor.</p>
+<p><strong>Theorem 3.3.2</strong>: The first law implies the second law.</p>
+<p>I'm skeptical of <strong>3.3.1</strong>. The source linked in typeclassopedia goes no<br />
+where relevant, and I believe a counterexample exists for the type<br />
+<code>Pair a</code> defined in section <a href="./3.2_Instances.hs">3.2</a>. Consider</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- my original solution</span>
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Pair</span> <span class="kw">where</span>
+  fmap g (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> (g x) (g y)
+
+<span class="co">-- alternative solution</span>
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Pair</span> <span class="kw">where</span>
+  fmap g (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> x (g y)</code></pre></div>
+<p>What's wrong with us just ignoring the first element, like we do with <code>((,) e)</code><br />
+and <code>Either e</code>?</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">fmap id (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> x (id y) <span class="fu">=</span> <span class="dt">Pair</span> x y
+id (<span class="dt">Pair</span> x y)                      <span class="fu">=</span> <span class="dt">Pair</span> x y</code></pre></div>
+<p>And there is no usage of <code>seq/undefined</code>... Sooo.. yeah. I don't believe <strong>3.3.1</strong><br />
+is true but would love for someone to prove me wrong.</p>
+<p><strong>ADDENDUM</strong> I have proved myself wrong. The alternative instance defined above<br />
+is invalid and doesn't even pass type safety, because <code>g :: (a -&gt; b)</code> and after<br />
+<code>fmap g</code> we would have a <code>Pair x y</code> value where <code>x :: a</code> and <code>y :: b</code>, conflicting<br />
+with the type definition <code>data Pair a = Pair a a</code>. Haskell +1, Sam -1.</p>
+<h4 id="although-it-is-not-possible-for-a-functor-instance-to-satisfy-the-first-functor-law-but-not-the-second-excluding-undefined-the-reverse-is-possible.-give-an-example-of-a-bogus-functor-instance-which-satisfies-the-second-law-but-not-the-first.">1. Although it is not possible for a Functor instance to satisfy the first Functor law but not the second (excluding undefined), the reverse is possible. Give an example of a (bogus) Functor instance which satisfies the second law but not the first.</h4>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Pair</span> a <span class="fu">=</span> <span class="dt">Pair</span> <span class="dt">Int</span> a
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Pair</span> <span class="kw">where</span>
+  fmap g (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> <span class="dv">0</span> (g y)</code></pre></div>
+<p>Now consider any functions <code>g</code>, <code>h</code> where <code>g :: a -&gt; b</code> and <code>h :: a -&gt; b</code></p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">fmap (g <span class="fu">.</span> h) (<span class="dt">Pair</span> x y) <span class="fu">=</span> <span class="dt">Pair</span> <span class="dv">0</span> (g <span class="fu">.</span> h) y
+                        <span class="fu">=</span> <span class="dt">Pair</span> <span class="dv">0</span> g (h y)
+                        <span class="fu">=</span> fmap g (<span class="dt">Pair</span> x h y)
+                        <span class="fu">=</span> fmap g (fmap h (<span class="dt">Pair</span> x y))
+                        <span class="fu">=</span> (fmap g) <span class="fu">.</span> (fmap h) <span class="fu">$</span> <span class="dt">Pair</span> x y</code></pre></div>
+<p>Therefore this instance satisfies the second law. However, it clearly doesn't<br />
+satisfy the first.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">fmap id (<span class="dt">Pair</span> <span class="dv">10</span> <span class="st">&quot;Oh no!&quot;</span>) <span class="fu">=</span> <span class="dt">Pair</span> <span class="dv">0</span> <span class="st">&quot;Oh no!&quot;</span> <span class="fu">/=</span> <span class="dt">Pair</span> <span class="dv">10</span> <span class="st">&quot;Oh no!&quot;</span></code></pre></div>
+<h4 id="which-laws-are-violated-by-the-following-evil-functor-instance">2. Which laws are violated by the following evil functor instance?</h4>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Functor</span> [] <span class="kw">where</span>
+  fmap _ [] <span class="fu">=</span> []
+  fmap g (x<span class="fu">:</span>xs) <span class="fu">=</span> g x <span class="fu">:</span> g x <span class="fu">:</span> fmap g xs</code></pre></div>
+<p>Both laws. Observe.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Law 1 counterexample</span>
+fmap id [<span class="dv">1</span>] <span class="fu">=</span> [<span class="dv">1</span>, <span class="dv">1</span>] <span class="co">-- /= [1]</span>
+
+<span class="co">-- Law 2 counterexample</span>
+fmap ((<span class="fu">*</span><span class="dv">2</span>) <span class="fu">.</span> (<span class="fu">*</span><span class="dv">2</span>)) [<span class="dv">1</span>] <span class="fu">=</span> [<span class="dv">1</span><span class="fu">*</span><span class="dv">2</span><span class="fu">*</span><span class="dv">2</span>, <span class="dv">1</span><span class="fu">*</span><span class="dv">2</span><span class="fu">*</span><span class="dv">2</span>] <span class="fu">=</span> [<span class="dv">4</span>,<span class="dv">4</span>]
+<span class="co">-- But when fmap happens twice, the list increases size twice:</span>
+fmap (<span class="fu">*</span><span class="dv">2</span>) <span class="fu">.</span> fmap (<span class="fu">*</span><span class="dv">2</span>) <span class="fu">$</span> [<span class="dv">1</span>] <span class="fu">=</span> fmap (<span class="fu">*</span><span class="dv">2</span>) <span class="fu">$</span> [<span class="dv">1</span><span class="fu">*</span><span class="dv">2</span>, <span class="dv">1</span><span class="fu">*</span><span class="dv">2</span>]
+                            <span class="fu">=</span> [<span class="dv">1</span><span class="fu">*</span><span class="dv">2</span><span class="fu">*</span><span class="dv">2</span>, <span class="dv">1</span><span class="fu">*</span><span class="dv">2</span><span class="fu">*</span><span class="dv">2</span>, <span class="dv">1</span><span class="fu">*</span><span class="dv">2</span><span class="fu">*</span><span class="dv">2</span>, <span class="dv">1</span><span class="fu">*</span><span class="dv">2</span><span class="fu">*</span><span class="dv">2</span>] <span class="fu">=</span> [<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">4</span>] <span class="co">-- /= [4,4]</span></code></pre></div>
+<p>Of course, by Theorem <strong>3.3.2</strong> we could just provide a counterexample for Law 2,<br />
+and thus by contrapositive know that Law 1 is not satisfied. But, might as well<br />
+be thorough.</p>
+<h1 id="intuition">3.4 Intuition</h1>
+<p>Most explanations of <code>fmap</code> talk about applying a function to a value within a context,<br />
+without modifying that context. We can also take a more functional view: recall that <code>fmap</code>,<br />
+just like any other Haskell function, is curried. So when we consider its type<br />
+<code>(a -&gt; b) -&gt; f a -&gt; f b</code> we can also think of this as <code>(a -&gt; b) -&gt; (f a -&gt; f b)</code> and<br />
+think about what happens when we just apply the first parameter, which is a function of<br />
+type <code>a -&gt; b</code>. In this way, we can think of <code>fmap</code> as transforming a &quot;normal&quot; function <code>g :: a -&gt; b</code><br />
+to one that operates over contexts <code>fmap g :: f a -&gt; f b</code>.</p>
+<p>This transformation is known as <em>lift</em>. We say that <code>fmap</code> <em>lifts</em> a function from the &quot;normal world&quot;<br />
+to the &quot;<code>f</code> world&quot;</p>
+<h1 id="definition">4.1 Definition</h1>
+<p>Defined in <code>Control.Applicative</code>:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">Functor</span> f <span class="ot">=&gt;</span> <span class="dt">Applicative</span> f <span class="kw">where</span>
+<span class="ot">  pure  ::</span> a <span class="ot">-&gt;</span> f a
+  <span class="kw">infixl</span> <span class="dv">4</span> <span class="fu">&lt;*&gt;</span>, <span class="fu">*&gt;</span>, <span class="fu">&lt;*</span>
+<span class="ot">  (&lt;*&gt;) ::</span> f (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b
+ 
+<span class="ot">  (*&gt;) ::</span> f a <span class="ot">-&gt;</span> f b <span class="ot">-&gt;</span> f b
+  a1 <span class="fu">*&gt;</span> a2 <span class="fu">=</span> (id <span class="fu">&lt;$</span> a1) <span class="fu">&lt;*&gt;</span> a2
+ 
+<span class="ot">  (&lt;*) ::</span> f a <span class="ot">-&gt;</span> f b <span class="ot">-&gt;</span> f a
+  (<span class="fu">&lt;*</span>) <span class="fu">=</span> liftA2 const</code></pre></div>
+<ol>
+<li><code>&lt;*&gt;</code> is similar to <code>fmap</code> for applying functions to values with context, however this is used when the function we are applying is <em>also</em> within context. <code>&lt;*&gt;</code> is pronounced as <em>apply</em>, <em>app</em>, or <em>splat</em>.</li>
+<li><code>pure</code> embeds values in a default <em>effect free</em> context.</li>
+<li><code>*&gt;</code> sequences the effects of two computations, but discards the result of the first</li>
+<li><code>&lt;*</code> sequences the effects of two computations, but discards the result of the second</li>
+</ol>
+<p><strong>Note</strong> similar to <code>&lt;$</code> and <code>$&gt;</code>, the array points to the value being &quot;kept&quot;</p>
+<p>Things to note here:</p>
+<ul>
+<li><code>&lt;*&gt;</code> similarity to <code>fmap</code>, except applied function <code>a -&gt; b</code> is already wrapped in context <code>f</code>.</li>
+<li><code>&lt;*&gt;</code> similarity to <code>$</code>, except all types wrapped in context <code>f</code>. (Hence the applicator name.)</li>
+</ul>
+<h1 id="laws-1">4.2 Laws</h1>
+<p>The traditional laws around <code>Applicative</code> instances are about ensuring that <code>pure</code> is pure.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Rule</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pure id &lt;*&gt; v = v</code></td>
+<td>Identity</td>
+</tr>
+<tr class="even">
+<td><code>pure f &lt;*&gt; pure x = pure (f x)</code></td>
+<td>Homomorphism</td>
+</tr>
+<tr class="odd">
+<td><code>u &lt;*&gt; pure y = pure ($ y) &lt;*&gt; u</code></td>
+<td>Interchange</td>
+</tr>
+<tr class="even">
+<td><code>u &lt;*&gt; (v &lt;*&gt; w) = pure (.) &lt;*&gt; u &lt;*&gt; v &lt;*&gt; w</code></td>
+<td>Composition</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li><strong>Identity</strong>: A lifted <code>id</code> function acts as <code>id</code> for values in context</li>
+<li><strong>Homomorphism</strong>: Intuitively, applying a non-effectful function to a non-effectful argument in an effectful context is the same as just applying the function to the argument and then injecting the result into the context with pure.</li>
+<li><strong>Interchange</strong>: Intuitively, this says that when evaluating the application of an effectful function to a pure argument, the order in which we evaluate the function and its argument doesn't matter.</li>
+<li><strong>Composition</strong>: Associativity of lifted compositions.</li>
+</ol>
+<p>Notice how each law translates an expression into a canonical form with only a single use of <code>pure</code> at the beginning, and only left-nested occurences of <code>&lt;*&gt;</code>.</p>
+<p>Another law relates back to <code>Functor</code>:</p>
+<ol>
+<li><code>fmap g x = pure g &lt;*&gt; x</code></li>
+</ol>
+<p>This better hold true, otherwise bringing <code>g</code> into context via <code>pure g</code> would be a sham.</p>
+<h4 id="tricky-one-might-imagine-a-variant-of-the-interchange-law-that-says-something-about-applying-a-pure-function-to-an-effectful-argument.-using-the-above-laws-prove-that">1. (Tricky) One might imagine a variant of the interchange law that says something about applying a pure function to an effectful argument. Using the above laws, prove that</h4>
+<p><code>pure f &lt;*&gt; x = pure (flip ($)) &lt;*&gt; x &lt;*&gt; pure f</code></p>
+<p><strong>Proof</strong>:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- Let u = pure f and x = pure y</span>
+pure (flip (<span class="fu">$</span>)) <span class="fu">&lt;*&gt;</span> x <span class="fu">&lt;*&gt;</span> pure f  <span class="fu">=</span>  pure (flip (<span class="fu">$</span>)) <span class="fu">&lt;*&gt;</span> pure y <span class="fu">&lt;*&gt;</span> pure f  <span class="co">-- by definition</span>
+                                  <span class="fu">=</span>  pure (flip (<span class="fu">$</span>) y) <span class="fu">&lt;*&gt;</span> pure f           <span class="co">-- by Homomorphism</span>
+                                  <span class="fu">=</span>  pure ((flip (<span class="fu">$</span>)) y f)                  <span class="co">-- by Homomorphism</span>
+                                  <span class="fu">=</span>  pure (f y)                             <span class="co">-- by definition of flip,$</span>
+                                  <span class="fu">=</span>  pure f <span class="fu">&lt;*&gt;</span> pure y                      <span class="co">-- by Homomorphism</span>
+                                  <span class="fu">=</span>  pure f <span class="fu">&lt;*&gt;</span> x                           <span class="co">-- by definition</span></code></pre></div>
+<p>Note: This assumes existence of inverse of <code>pure</code>, that is, retrieving a direct value from a context.</p>
+<h1 id="instances-1">4.3 Instances</h1>
+<h3 id="implement-an-instance-of-applicative-for-maybe">1. Implement an instance of <code>Applicative</code> for <code>Maybe</code></h3>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Applicative</span> <span class="dt">Maybe</span> <span class="kw">where</span>
+  pure <span class="fu">=</span> <span class="dt">Just</span>
+  (<span class="dt">Just</span> f) <span class="fu">&lt;*&gt;</span> (<span class="dt">Just</span> x) <span class="fu">=</span> <span class="dt">Just</span> (f x)
+  _ <span class="fu">&lt;*&gt;</span> _               <span class="fu">=</span> <span class="dt">Nothing</span></code></pre></div>
+<h3 id="determine-the-correct-definition-of-pure-for-this-instance-of-ziplist">2. Determine the correct definition of <code>pure</code> for this instance of <code>ZipList</code></h3>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">newtype</span> <span class="dt">ZipList</span> a <span class="fu">=</span> <span class="dt">ZipList</span> {<span class="ot"> getZipList ::</span> [a] }
+
+<span class="kw">instance</span> <span class="dt">Applicative</span> <span class="dt">ZipList</span> <span class="kw">where</span>
+  pure x <span class="fu">=</span> <span class="dt">ZipList</span> <span class="fu">$</span> repeat x
+  (<span class="dt">ZipList</span> gs) <span class="fu">&lt;*&gt;</span> (<span class="dt">ZipList</span> xs) <span class="fu">=</span> <span class="dt">ZipList</span> (zipWith (<span class="fu">$</span>) gs xs)</code></pre></div>
+<h1 id="utility-functions">4.5 Utility functions</h1>
+<h3 id="implement-a-function-sequenceal-applicative-f-f-a---f-a.">1. Implement a function <code>sequenceAL :: Applicative f =&gt; [f a] -&gt; f [a]</code>.</h3>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">sequenceAL ::</span> <span class="dt">Applicative</span> f <span class="ot">=&gt;</span> [f a] <span class="ot">-&gt;</span> f [a]
+sequenceAL <span class="fu">=</span> foldr (liftA2 (<span class="fu">:</span>)) (pure [])</code></pre></div>
+<h1 id="alternative-formulation">4.6 Alternative formulation</h1>
+</body>
+</html>

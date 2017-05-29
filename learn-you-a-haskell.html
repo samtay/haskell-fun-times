@@ -1,0 +1,1523 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="https://necolas.github.io/normalize.css/latest/normalize.css" type="text/css" />
+  <link rel="stylesheet" href="https://gist.githubusercontent.com/dashed/6714393/raw/ae966d9d0806eb1e24462d88082a0264438adc50/github-pandoc.css" type="text/css" />
+  <link rel="stylesheet" href="/haskell-fun-times/css/custom.css" type="text/css" />
+</head>
+<body>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">{--</span>
+<span class="co">  parallel to (Eq) or (Ord) type classes, type instances of (Truthy)</span>
+<span class="co">  will support usage of (truthy) function</span>
+<span class="co">--}</span>
+<span class="kw">import </span><span class="dt">TrafficLight</span>
+<span class="kw">import </span><span class="dt">BinaryTree</span>
+
+<span class="kw">class</span> <span class="dt">Truthy</span> a <span class="kw">where</span>
+<span class="ot">  truthy ::</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+
+
+<span class="kw">instance</span> <span class="dt">Truthy</span> <span class="dt">Int</span> <span class="kw">where</span>
+  truthy <span class="dv">0</span> <span class="fu">=</span> <span class="dt">False</span>
+  truthy _ <span class="fu">=</span> <span class="dt">True</span>
+
+<span class="kw">instance</span> <span class="dt">Truthy</span> [a] <span class="kw">where</span>
+  truthy [] <span class="fu">=</span> <span class="dt">False</span>
+  truthy _ <span class="fu">=</span> <span class="dt">True</span>
+
+<span class="kw">instance</span> <span class="dt">Truthy</span> <span class="dt">Bool</span> <span class="kw">where</span>
+  truthy <span class="fu">=</span> id <span class="co">-- note the implicit use of currying</span>
+
+<span class="kw">instance</span> <span class="dt">Truthy</span> (<span class="dt">Maybe</span> a) <span class="kw">where</span>
+  truthy (<span class="dt">Just</span> _) <span class="fu">=</span> <span class="dt">True</span>
+  truthy <span class="dt">Nothing</span> <span class="fu">=</span> <span class="dt">False</span>
+
+<span class="kw">instance</span> <span class="dt">Truthy</span> (<span class="dt">Tree</span> a) <span class="kw">where</span>
+  truthy <span class="dt">EmptyTree</span> <span class="fu">=</span> <span class="dt">False</span>
+  truthy _ <span class="fu">=</span> <span class="dt">True</span>
+
+<span class="kw">instance</span> <span class="dt">Truthy</span> <span class="dt">TrafficLight</span> <span class="kw">where</span>
+  truthy <span class="dt">Red</span> <span class="fu">=</span> <span class="dt">False</span>
+  truthy _ <span class="fu">=</span> <span class="dt">True</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">TrafficLight</span>
+( <span class="dt">TrafficLight</span>(<span class="fu">..</span>)
+) <span class="kw">where</span>
+
+<span class="kw">data</span> <span class="dt">TrafficLight</span> <span class="fu">=</span> <span class="dt">Red</span> <span class="fu">|</span> <span class="dt">Yellow</span> <span class="fu">|</span> <span class="dt">Green</span>
+
+<span class="kw">instance</span> <span class="dt">Eq</span> <span class="dt">TrafficLight</span> <span class="kw">where</span>
+  <span class="dt">Red</span> <span class="fu">==</span> <span class="dt">Red</span> <span class="fu">=</span> <span class="dt">True</span>
+  <span class="dt">Yellow</span> <span class="fu">==</span> <span class="dt">Yellow</span> <span class="fu">=</span> <span class="dt">True</span>
+  <span class="dt">Green</span> <span class="fu">==</span> <span class="dt">Green</span> <span class="fu">=</span> <span class="dt">True</span>
+  _ <span class="fu">==</span> _ <span class="fu">=</span> <span class="dt">False</span>
+
+<span class="kw">instance</span> <span class="dt">Show</span> <span class="dt">TrafficLight</span> <span class="kw">where</span>
+  show <span class="dt">Red</span> <span class="fu">=</span> <span class="st">&quot;Red Light&quot;</span>
+  show <span class="dt">Yellow</span> <span class="fu">=</span> <span class="st">&quot;Yellow Light&quot;</span>
+  show <span class="dt">Green</span> <span class="fu">=</span> <span class="st">&quot;Green Light!&quot;</span>
+
+
+<span class="co">{-- standard Prelude Eq class def</span>
+<span class="co">class Eq a where  </span>
+<span class="co">  (==) :: a -&gt; a -&gt; Bool  </span>
+<span class="co">  (/=) :: a -&gt; a -&gt; Bool  </span>
+<span class="co">  x == y = not (x /= y)  </span>
+<span class="co">  x /= y = not (x == y) </span>
+<span class="co">--}</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Records</span>
+( <span class="dt">Person</span>(<span class="fu">..</span>)
+, <span class="dt">Car</span>(<span class="fu">..</span>)
+, <span class="dt">Vector</span>(<span class="fu">..</span>)
+, scalarMult
+) <span class="kw">where</span>
+<span class="kw">import qualified</span> <span class="dt">Data.Set</span> <span class="kw">as</span> <span class="dt">Set</span>
+
+<span class="kw">data</span> <span class="dt">Person</span> <span class="fu">=</span> <span class="dt">Person</span> {<span class="ot"> firstName ::</span> <span class="dt">String</span>
+                     ,<span class="ot"> lastName ::</span> <span class="dt">String</span>
+                     ,<span class="ot"> age ::</span> <span class="dt">Int</span>
+                     ,<span class="ot"> height ::</span> <span class="dt">Float</span>
+                     ,<span class="ot"> flavor ::</span> <span class="dt">String</span>
+                     } <span class="kw">deriving</span> (<span class="dt">Eq</span>, <span class="dt">Show</span>, <span class="dt">Read</span>, <span class="dt">Ord</span>)
+
+<span class="kw">type</span> <span class="dt">People</span> <span class="fu">=</span> [<span class="dt">Person</span>]
+
+<span class="ot">uniq&#39; ::</span> <span class="dt">People</span> <span class="ot">-&gt;</span> <span class="dt">People</span>
+uniq&#39; <span class="fu">=</span> Set.toList <span class="fu">.</span> Set.fromList 
+
+<span class="kw">data</span> <span class="dt">Car</span> <span class="fu">=</span> <span class="dt">Car</span> {<span class="ot">company ::</span> <span class="dt">String</span>,<span class="ot"> model ::</span> <span class="dt">String</span>,<span class="ot"> year ::</span> <span class="dt">Int</span>} <span class="kw">deriving</span> (<span class="dt">Show</span>)
+
+<span class="kw">data</span> <span class="dt">Vector</span> a <span class="fu">=</span> <span class="dt">Vector</span> a a a <span class="kw">deriving</span> (<span class="dt">Show</span>)
+ <span class="co">-- Note (Vector a) is the type constructor</span>
+    <span class="co">--   while (Vector a a a) is the value constructor</span>
+
+<span class="co">-- Note this type declaration takes the `type constuctor` with its single parameter</span>
+<span class="ot">scalarMult ::</span> (<span class="dt">Num</span> t) <span class="ot">=&gt;</span> <span class="dt">Vector</span> t <span class="ot">-&gt;</span> <span class="dt">Vector</span> t <span class="ot">-&gt;</span> t
+(<span class="dt">Vector</span> i j k) <span class="ot">`scalarMult`</span> (<span class="dt">Vector</span> l m n) <span class="fu">=</span> i<span class="fu">*</span>l <span class="fu">+</span> j<span class="fu">*</span>m <span class="fu">+</span> k<span class="fu">*</span>n
+<span class="co">-- while the pattern matching is done against the `value constructor` with its three parameters</span></code></pre></div>
+<h1 id="the-playground">the playground</h1>
+<p>This directory is filled with general training tidbits while going through the <a href="http://learnyouahaskell.com/">learnyouahaskell</a> online book. Most of these files defined new types or just basic functions which were then played with in ghci.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Random</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  gen <span class="ot">&lt;-</span> getStdGen
+  putStrLn <span class="fu">$</span> show <span class="fu">$</span> <span class="kw">let</span> (n, newGen) <span class="fu">=</span> random gen <span class="kw">in</span> rollDie n
+  putStrLn <span class="fu">$</span> take <span class="dv">20</span> (randomRs (<span class="ch">&#39;a&#39;</span>, <span class="ch">&#39;z&#39;</span>) gen)
+
+<span class="co">-- three random coin flips</span>
+<span class="co">-- note Haskell inferring that random gen* :: (Bool, StdGen)</span>
+<span class="ot">threeCoins ::</span> <span class="dt">StdGen</span> <span class="ot">-&gt;</span> (<span class="dt">Bool</span>, <span class="dt">Bool</span>, <span class="dt">Bool</span>)
+threeCoins gen <span class="fu">=</span>
+  <span class="kw">let</span> (firstCoin, gen1) <span class="fu">=</span> random gen
+      (secondCoin, gen2) <span class="fu">=</span> random gen1
+      (thirdCoin, _) <span class="fu">=</span> random gen2
+   <span class="kw">in</span> (firstCoin, secondCoin, thirdCoin)
+
+<span class="co">-- randoms constructs infinite list</span>
+<span class="co">{-- usage:</span>
+<span class="co">  nRandoms 10 10 :: [Float]</span>
+<span class="co">--}</span>
+<span class="ot">nRandoms ::</span> (<span class="dt">Random</span> a) <span class="ot">=&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> [a]
+nRandoms n starter <span class="fu">=</span> take n <span class="fu">$</span> randoms (mkStdGen starter)
+
+<span class="ot">rollDie ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+rollDie starter <span class="fu">=</span> <span class="kw">let</span> (roll, _) <span class="fu">=</span> randomR (<span class="dv">1</span>,<span class="dv">6</span>) (mkStdGen starter) <span class="kw">in</span> roll
+
+<span class="ot">randomLetters ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+randomLetters n starter <span class="fu">=</span> take n <span class="fu">$</span> randomRs (<span class="ch">&#39;a&#39;</span>, <span class="ch">&#39;z&#39;</span>) (mkStdGen starter)<span class="ot"> ::</span> <span class="dt">String</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">findKey ::</span> (<span class="dt">Eq</span> k) <span class="ot">=&gt;</span> k <span class="ot">-&gt;</span> [(k, v)] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> v
+<span class="co">-- findKey _ [] = Nothing</span>
+findKey key <span class="fu">=</span> foldr (\(k, v) acc <span class="ot">-&gt;</span> <span class="kw">if</span> (k <span class="fu">==</span> key) <span class="kw">then</span> <span class="dt">Just</span> v <span class="kw">else</span> acc) <span class="dt">Nothing</span>
+
+
+<span class="co">{--</span>
+<span class="co">Wow, I was trying to implement this &quot;caller&quot; and then continued tutorial and found $</span>
+<span class="co">-- and I was damn close to standard implementation.... </span>
+<span class="co">caller :: a -&gt; (a -&gt; b -&gt; c) -&gt; (b -&gt; c)</span>
+<span class="co">caller x f = f x</span>
+<span class="co">--}</span>
+
+<span class="ot">mapr&#39; ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
+mapr&#39; f xs <span class="fu">=</span> foldr (\x acc <span class="ot">-&gt;</span> (f x)<span class="fu">:</span>acc) [] xs
+
+
+<span class="ot">elem&#39; ::</span> (<span class="dt">Eq</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+elem&#39; y ys <span class="fu">=</span> foldl (\acc x <span class="ot">-&gt;</span> <span class="kw">if</span> x <span class="fu">==</span> y <span class="kw">then</span> <span class="dt">True</span> <span class="kw">else</span> acc) <span class="dt">False</span> ys
+
+
+<span class="ot">sum&#39; ::</span> (<span class="dt">Num</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> a
+<span class="co">-- sum&#39; xs = foldl (+) 0 xs</span>
+sum&#39; <span class="fu">=</span> foldl (<span class="fu">+</span>) <span class="dv">0</span> <span class="co">-- make use of currying!</span>
+<span class="co">-- foo a = bar b a   ===&gt;   foo = bar b</span>
+
+
+<span class="ot">numChains ::</span> <span class="dt">Int</span>
+numChains <span class="fu">=</span> length (filter (\xs <span class="ot">-&gt;</span> length xs <span class="fu">&gt;</span> <span class="dv">15</span>) (map chain [<span class="dv">1</span><span class="fu">..</span><span class="dv">100</span>]))
+<span class="co">-- &quot;anonymous funcs&quot; called lambdas</span>
+
+
+<span class="ot">chain ::</span> (<span class="dt">Integral</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> [a]
+chain n
+  <span class="fu">|</span> n <span class="fu">==</span> <span class="dv">1</span>    <span class="fu">=</span> [<span class="dv">1</span>]
+  <span class="fu">|</span> odd n     <span class="fu">=</span> n<span class="fu">:</span>chain (<span class="dv">3</span><span class="fu">*</span>n <span class="fu">+</span> <span class="dv">1</span>)
+  <span class="fu">|</span> otherwise <span class="fu">=</span> n<span class="fu">:</span>chain (n<span class="ot">`div`</span><span class="dv">2</span>)
+
+
+<span class="ot">flip&#39; ::</span> (a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> c)
+flip&#39; f <span class="fu">=</span> g
+  <span class="kw">where</span> g x y <span class="fu">=</span> f y x
+
+<span class="co">-- OR</span>
+<span class="co">-- flip&#39; f x y = f y x ## OOOOO wow curried functions FTW !!!!</span>
+
+<span class="ot">zipW&#39; ::</span> (a <span class="ot">-&gt;</span> b <span class="ot">-&gt;</span> c) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b] <span class="ot">-&gt;</span> [c]
+zipW&#39; f _ []          <span class="fu">=</span> []
+zipW&#39; f [] _          <span class="fu">=</span> []
+zipW&#39; f (x<span class="fu">:</span>xs) (y<span class="fu">:</span>ys) <span class="fu">=</span> f x y <span class="fu">:</span> zipW&#39; f xs ys
+
+
+<span class="ot">quicksort ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+quicksort []      <span class="fu">=</span> []
+quicksort (x<span class="fu">:</span>xs)  <span class="fu">=</span> 
+  <span class="kw">let</span> smaller <span class="fu">=</span> quicksort [a <span class="fu">|</span> a <span class="ot">&lt;-</span> xs, a <span class="fu">&lt;=</span> x]
+      bigger <span class="fu">=</span> quicksort [a <span class="fu">|</span> a <span class="ot">&lt;-</span> xs, a <span class="fu">&gt;</span> x]
+  <span class="kw">in</span> smaller <span class="fu">++</span> [x] <span class="fu">++</span> bigger
+
+<span class="ot">rev&#39; ::</span> [a] <span class="ot">-&gt;</span> [a]
+rev&#39; [] <span class="fu">=</span> []
+rev&#39; (x<span class="fu">:</span>xs) <span class="fu">=</span> rev&#39; xs <span class="fu">++</span> [x]
+
+
+<span class="ot">take&#39; ::</span> (<span class="dt">Num</span> i, <span class="dt">Ord</span> i) <span class="ot">=&gt;</span> i <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+take&#39; n _
+  <span class="fu">|</span> n <span class="fu">&lt;=</span> <span class="dv">0</span>     <span class="fu">=</span> []
+take&#39; n []     <span class="fu">=</span> []
+take&#39; n (x<span class="fu">:</span>xs) <span class="fu">=</span> x<span class="fu">:</span>take&#39; (n<span class="fu">-</span><span class="dv">1</span>) xs
+
+<span class="ot">rep&#39; ::</span> (<span class="dt">Num</span> i, <span class="dt">Ord</span> i) <span class="ot">=&gt;</span> i <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> [a]
+rep&#39; n x
+  <span class="fu">|</span> n <span class="fu">&lt;=</span><span class="dv">0</span> <span class="fu">=</span> []
+  <span class="fu">|</span> otherwise <span class="fu">=</span> x<span class="fu">:</span>rep&#39; (n<span class="fu">-</span><span class="dv">1</span>) x
+
+<span class="ot">recFunc ::</span> (<span class="dt">Num</span> b) <span class="ot">=&gt;</span> [b] <span class="ot">-&gt;</span> b
+recFunc [] <span class="fu">=</span> <span class="dv">0</span>
+recFunc x <span class="fu">=</span> <span class="dv">1</span>
+
+<span class="ot">bmiTell ::</span> (<span class="dt">RealFloat</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">String</span>  
+bmiTell weight height  
+  <span class="fu">|</span> bmi <span class="fu">&lt;=</span> <span class="fl">18.5</span> <span class="fu">=</span> <span class="st">&quot;You&#39;re underweight, you emo, you!&quot;</span>  
+  <span class="fu">|</span> bmi <span class="fu">&lt;=</span> <span class="fl">25.0</span> <span class="fu">=</span> <span class="st">&quot;You&#39;re supposedly normal. Pffft, I bet you&#39;re ugly!&quot;</span>  
+  <span class="fu">|</span> bmi <span class="fu">&lt;=</span> <span class="fl">30.0</span> <span class="fu">=</span> <span class="st">&quot;You&#39;re fat! Lose some weight, fatty!&quot;</span>  
+  <span class="fu">|</span> otherwise   <span class="fu">=</span> <span class="st">&quot;You&#39;re a whale, congratulations!&quot;</span>  
+  <span class="kw">where</span> bmi <span class="fu">=</span> weight <span class="fu">/</span> height <span class="fu">^</span> <span class="dv">2</span>  
+
+<span class="ot">max&#39; ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> [a] <span class="ot">-&gt;</span> a
+max&#39; [] <span class="fu">=</span> error <span class="st">&quot;no max of empty list&quot;</span>
+max&#39; [x] <span class="fu">=</span> x
+max&#39; (x<span class="fu">:</span>xs)
+  <span class="fu">|</span> x <span class="fu">&gt;</span> maxTail <span class="fu">=</span> x
+  <span class="fu">|</span>otherwise <span class="fu">=</span> maxTail
+  <span class="kw">where</span> maxTail <span class="fu">=</span> max&#39; xs</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">{--</span>
+
+<span class="co">1    type: Just for synonyms, giving another name to existing type</span>
+<span class="co">           These dont give value constructors or anything, they just allow us to use a new</span>
+<span class="co">           name for existing types in our type annotations and whatnot, for clarity.</span>
+
+<span class="co">2 newtype: Wrapping existing types</span>
+<span class="co">           Usually to make them instances of certain type classes</span>
+<span class="co">           Not automatically made an instance of the same type classes of original type</span>
+
+<span class="co">3    data: Making custom data types</span>
+<span class="co">           Ultimate flexibility, can have as many constructors and fields as you wish</span>
+<span class="co">--}</span>
+<span class="co">{--</span>
+
+<span class="co">The newtype keyword is made for wrapping functionality of existing types.</span>
+
+<span class="co">It differs from the data keyword because it is restricted to a single value</span>
+<span class="co">constructor that has a single field (what we are wrapping). If this is the</span>
+<span class="co">use case, newtype is preferred for speed.</span>
+
+<span class="co">ZipList a is defined as:</span>
+
+<span class="co">newtype ZipList a = ZipList { getZipList :: [a] }</span>
+<span class="co">--}</span>
+<span class="co">{--</span>
+
+<span class="co">Using newtype to make type class instances:</span>
+
+<span class="co">What if we want to implement the Functor type class for tuples like (a,b)</span>
+<span class="co">where functions act on the first element of the tuple? This is tough with the</span>
+<span class="co">`instance Functor (* -&gt; *) where`</span>
+<span class="co">syntax.</span>
+
+<span class="co">We can solve this with a newtype, so that the second type parameter</span>
+<span class="co">represents the first component in the tuple:</span>
+<span class="co">--}</span>
+<span class="kw">newtype</span> <span class="dt">Pair</span> b a <span class="fu">=</span> <span class="dt">Pair</span> {<span class="ot"> getPair ::</span> (a,b) }
+
+<span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">Pair</span> c) <span class="kw">where</span>
+  fmap f (<span class="dt">Pair</span> (x,y)) <span class="fu">=</span> <span class="dt">Pair</span> (f x, y)
+
+
+<span class="kw">newtype</span> <span class="dt">CoolBool</span> <span class="fu">=</span> <span class="dt">CoolBool</span> {<span class="ot"> getCoolBool ::</span> <span class="dt">Bool</span> }
+
+<span class="ot">helloMe ::</span> <span class="dt">CoolBool</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+helloMe (<span class="dt">CoolBool</span> _) <span class="fu">=</span> <span class="st">&quot;hello&quot;</span>
+
+<span class="co">{--</span>
+
+<span class="co">With newtype, evaluation is kept lazy and internally can represent the new type as it does</span>
+<span class="co">with original values, only keeping track of the distinction. Because Haskell knows types made</span>
+<span class="co">with newtype can only have one constructor, it doesn&#39;t have to evaluate the value passed to</span>
+<span class="co">helloMe to make sure that it confroms to (CoolBool _) pattern, since newtype types can only</span>
+<span class="co">have one possible value constructor and one field. So</span>
+<span class="co">`helloMe undefined`</span>
+<span class="co">returns &quot;hello&quot; no problemo.</span>
+
+<span class="co">If instead defined with data keyword:</span>
+
+<span class="co">data CoolBool = CoolBool { getCoolBool :: Bool }</span>
+
+<span class="co">`helloMe undefined`</span>
+<span class="co">throws exception because it is forced to convert the value to the pattern.</span>
+<span class="co">--}</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Monoid</span>
+<span class="co">{--</span>
+
+<span class="co">YAY more math. Monoid is a generalization of groups (groups without guaranteed inverses)</span>
+
+<span class="co">class Monoid m where</span>
+<span class="co">  mempty :: m</span>
+<span class="co">  mappend :: m -&gt; m -&gt; m</span>
+<span class="co">  mconcat :: [m] -&gt; m</span>
+<span class="co">  mconcat = foldr mappend mempty</span>
+
+<span class="co">Laws:</span>
+<span class="co">  1. mempty `mappend` x = x</span>
+<span class="co">  2. x `mappend` mempty = x</span>
+<span class="co">  3. (x `mappend` y) `mappend` z = x `mappend` (y `mappend` z)</span>
+
+<span class="co">--}</span>
+
+<span class="co">{-- lists are monoids</span>
+<span class="co">instance Monoid [a] where</span>
+<span class="co">  mempty = []</span>
+<span class="co">  mappend = (++)</span>
+<span class="co">--}</span>
+
+<span class="co">{--</span>
+
+<span class="co">Since Num type can be a monoid under both * and +, Data.Monoid exports two types:</span>
+
+<span class="co">newtype Product a = Product { getProduct :: a }</span>
+<span class="co">  deriving (Eq, Ord, Read, Show, Bounded)</span>
+
+<span class="co">instance Num a =&gt; Monoid (Product a) where</span>
+<span class="co">  mempty = Product 1</span>
+<span class="co">  Product x `mappend` Product y = Product (x * y)</span>
+
+<span class="co">-- similar implementation for addition</span>
+
+<span class="co">Parallel to this, Any and All are Monoids based on Bool under (||, False) and (&amp;&amp;, True)</span>
+<span class="co">respectively</span>
+
+<span class="co">--}</span>
+
+<span class="ot">lengthCompare ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Ordering</span>
+lengthCompare x y <span class="fu">=</span> (length x <span class="ot">`compare`</span> length y) <span class="ot">`mappend`</span>
+                    (vowels x <span class="ot">`compare`</span> vowels y) <span class="ot">`mappend`</span>
+                    (x <span class="ot">`compare`</span> y)
+  <span class="kw">where</span> vowels <span class="fu">=</span> length <span class="fu">.</span> filter (<span class="ot">`elem`</span> <span class="st">&quot;aeiou&quot;</span>)
+
+<span class="ot">firstOfList ::</span> [<span class="dt">Maybe</span> a] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a
+firstOfList <span class="fu">=</span> getFirst <span class="fu">.</span> mconcat <span class="fu">.</span> map <span class="dt">First</span>
+
+<span class="ot">lastOfList ::</span> [<span class="dt">Maybe</span> a] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a
+lastOfList <span class="fu">=</span> getLast <span class="fu">.</span> mconcat <span class="fu">.</span> map <span class="dt">Last</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">class</span> <span class="dt">Tofu</span> t <span class="kw">where</span>
+<span class="ot">  tofu ::</span> j a <span class="ot">=&gt;</span> t a j
+
+
+<span class="co">{--</span>
+<span class="co">  Things to note:</span>
+<span class="co">    0. (j a) and (t a j) must each be of  kind *</span>
+<span class="co">    1. assume for simplicity that a is of kind *</span>
+<span class="co">    2. j must be of                       kind * -&gt; *</span>
+<span class="co">    3. t must be of                       kind * -&gt; (* -&gt; *) -&gt; *</span>
+<span class="co">  We know this because of the type declaration of function &quot;tofu&quot;, as only &quot;concrete&quot; types can be used to describe values, such as within function type declarations.</span>
+<span class="co">--}</span>
+
+<span class="kw">data</span> <span class="dt">Frank</span> a b <span class="fu">=</span> <span class="dt">Frank</span> {<span class="ot">ff ::</span> b a} <span class="kw">deriving</span> (<span class="dt">Show</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">{--</span>
+<span class="co">Any functions defined solely with symbols are auto infix</span>
+<span class="co">This line below is a &quot;fixity&quot; declaration and how tight the operator binds (priority) and whether left or right associative</span>
+<span class="co">--}</span>
+<span class="kw">infixr</span> <span class="dv">5</span> <span class="fu">:-:</span>
+
+<span class="kw">data</span> <span class="dt">List</span> a <span class="fu">=</span> <span class="dt">Empty</span> <span class="fu">|</span> a  <span class="fu">:-:</span> (<span class="dt">List</span> a) <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Read</span>, <span class="dt">Eq</span>, <span class="dt">Ord</span>)
+<span class="co">-- data List a = Empty | Cons a (List a) deriving (Show, Read, Eq, Ord)</span>
+
+<span class="kw">infixr</span> <span class="dv">6</span> <span class="fu">++.</span>
+<span class="ot">(++.) ::</span> <span class="dt">List</span> a <span class="ot">-&gt;</span> <span class="dt">List</span> a <span class="ot">-&gt;</span> <span class="dt">List</span> a
+<span class="dt">Empty</span> <span class="fu">++.</span> ys       <span class="fu">=</span> ys
+(x <span class="fu">:-:</span> xs) <span class="fu">++.</span> ys  <span class="fu">=</span> x <span class="fu">:-:</span> (xs <span class="fu">++.</span> ys)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Geometry</span>
+( sphereVolume
+, sphereArea
+, cubeVolume
+, cubeArea
+, cuboidArea
+, cuboidVolume
+) <span class="kw">where</span>
+
+<span class="ot">sphereVolume ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+sphereVolume r <span class="fu">=</span> (<span class="fl">4.0</span> <span class="fu">/</span> <span class="fl">3.0</span>) <span class="fu">*</span> pi <span class="fu">*</span> (r<span class="fu">^</span><span class="dv">3</span>)
+
+<span class="ot">sphereArea ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+sphereArea r <span class="fu">=</span> <span class="dv">4</span> <span class="fu">*</span> pi <span class="fu">*</span> (r <span class="fu">^</span> <span class="dv">2</span>)
+
+<span class="ot">cubeVolume ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+cubeVolume side <span class="fu">=</span> cuboidVolume side side side
+
+<span class="ot">cubeArea ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+cubeArea side <span class="fu">=</span> cuboidArea side side side
+
+<span class="ot">cuboidVolume ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+cuboidVolume a b c <span class="fu">=</span> rectangleArea a b <span class="fu">*</span> c
+
+<span class="ot">cuboidArea ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+cuboidArea a b c <span class="fu">=</span> rectangleArea a b <span class="fu">*</span> <span class="dv">2</span> <span class="fu">+</span> rectangleArea a c <span class="fu">*</span> <span class="dv">2</span> <span class="fu">+</span> rectangleArea c b <span class="fu">*</span> <span class="dv">2</span>
+
+<span class="ot">rectangleArea ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+rectangleArea a b <span class="fu">=</span> a <span class="fu">*</span> b</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import qualified</span> <span class="dt">BinaryTree</span> <span class="kw">as</span> <span class="dt">T</span>
+<span class="kw">import </span><span class="dt">Data.Monoid</span>
+
+<span class="kw">instance</span> <span class="dt">Foldable</span> <span class="dt">T.Tree</span> <span class="kw">where</span>
+  foldMap f <span class="dt">T.EmptyTree</span> <span class="fu">=</span> mempty
+  foldMap f (<span class="dt">T.Node</span> x l r) <span class="fu">=</span> foldMap f l <span class="ot">`mappend`</span>
+                           f x         <span class="ot">`mappend`</span>
+                           foldMap f r
+
+
+<span class="ot">addEmUp ::</span> (<span class="dt">Num</span> a) <span class="ot">=&gt;</span> <span class="dt">T.Tree</span> a <span class="ot">-&gt;</span> a
+addEmUp <span class="fu">=</span> foldl (<span class="fu">+</span>) <span class="dv">0</span>
+
+<span class="co">-- improved from T</span>
+<span class="ot">elemTree ::</span> (<span class="dt">Eq</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">T.Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+elemTree x <span class="fu">=</span> getAny <span class="fu">.</span> foldMap (\y <span class="ot">-&gt;</span> <span class="dt">Any</span> <span class="fu">$</span> x <span class="fu">==</span> y)
+
+<span class="ot">toArr ::</span> <span class="dt">T.Tree</span> a <span class="ot">-&gt;</span> [a]
+toArr <span class="fu">=</span> foldMap (\x <span class="ot">-&gt;</span> [x])</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Environment</span>
+<span class="kw">import </span><span class="dt">System.IO</span>
+
+<span class="co">{--</span>
+<span class="co">Testing file existence directly via doesFileExist</span>
+<span class="co">import System.Directory</span>
+
+<span class="co">main = do (fileName:_) &lt;- getArgs</span>
+<span class="co">          fileExists &lt;- doesFileExist fileName</span>
+<span class="co">          if fileExists</span>
+<span class="co">             then do contents &lt;- readFile fileName</span>
+<span class="co">                     putStrLn $ &quot;The file has &quot; ++ show (length (lines contents)) ++ &quot; lines!&quot;</span>
+<span class="co">             else do  putStrLn &quot;The file doesn&#39;t exist!&quot;</span>
+<span class="co">--}</span>
+
+<span class="co">-- catching exceptions</span>
+<span class="kw">import </span><span class="dt">System.IO.Error</span>
+main <span class="fu">=</span> try <span class="ot">`catchIOError`</span> handler
+
+<span class="ot">try ::</span> <span class="dt">IO</span> ()
+try <span class="fu">=</span> <span class="kw">do</span> (fileName<span class="fu">:</span>_) <span class="ot">&lt;-</span> getArgs
+         contents <span class="ot">&lt;-</span> readFile fileName
+         putStrLn <span class="fu">$</span> <span class="st">&quot;The file has &quot;</span> <span class="fu">++</span> show (length (lines contents)) <span class="fu">++</span> <span class="st">&quot; lines!&quot;</span>
+
+<span class="ot">handler ::</span> IOError <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+handler e
+  <span class="fu">|</span> isDoesNotExistError e <span class="fu">=</span> putStrLn <span class="st">&quot;The file doesn&#39;t exist&quot;</span>
+  <span class="fu">|</span> isPermissionError e <span class="fu">=</span> putStrLn <span class="st">&quot;The file lacks read permissions&quot;</span>
+  <span class="fu">|</span> otherwise <span class="fu">=</span> ioError e</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import qualified</span> <span class="dt">Data.Map</span> <span class="kw">as</span> <span class="dt">Map</span>
+
+<span class="kw">data</span> <span class="dt">LockerState</span> <span class="fu">=</span> <span class="dt">Taken</span> <span class="fu">|</span> <span class="dt">Free</span> <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>) <span class="co">-- two states for locker</span>
+<span class="kw">type</span> <span class="dt">Code</span> <span class="fu">=</span> <span class="dt">String</span>
+<span class="kw">type</span> <span class="dt">LockerMap</span> <span class="fu">=</span> <span class="dt">Map.Map</span> <span class="dt">Int</span> (<span class="dt">LockerState</span>, <span class="dt">Code</span>) <span class="co">-- [ int -&gt; [state, code] ]</span>
+
+<span class="ot">lockerLookup ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">LockerMap</span> <span class="ot">-&gt;</span> <span class="dt">Either</span> <span class="dt">String</span> <span class="dt">Code</span>
+lockerLookup num map <span class="fu">=</span>
+  <span class="kw">case</span> Map.lookup num map <span class="kw">of</span>
+    <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="dt">Left</span> <span class="fu">$</span> <span class="st">&quot;Locker number &quot;</span> <span class="fu">++</span> show num <span class="fu">++</span> <span class="st">&quot; doesn&#39;t exist!&quot;</span>
+    <span class="dt">Just</span> (state, code) <span class="ot">-&gt;</span> <span class="kw">if</span> state <span class="fu">/=</span> <span class="dt">Taken</span>
+                             <span class="kw">then</span> <span class="dt">Right</span> code
+                             <span class="kw">else</span> <span class="dt">Left</span> <span class="fu">$</span> <span class="st">&quot;Locker number &quot;</span> <span class="fu">++</span> show num <span class="fu">++</span> <span class="st">&quot; is taken!&quot;</span>
+
+
+<span class="co">-- data</span>
+<span class="ot">lockers ::</span> <span class="dt">LockerMap</span>
+lockers <span class="fu">=</span> Map.fromList
+    [(<span class="dv">100</span>,(<span class="dt">Taken</span>,<span class="st">&quot;ZD39I&quot;</span>))
+    ,(<span class="dv">101</span>,(<span class="dt">Free</span>,<span class="st">&quot;JAH3I&quot;</span>))
+    ,(<span class="dv">103</span>,(<span class="dt">Free</span>,<span class="st">&quot;IQSA9&quot;</span>))
+    ,(<span class="dv">105</span>,(<span class="dt">Free</span>,<span class="st">&quot;QOTSA&quot;</span>))
+    ,(<span class="dv">109</span>,(<span class="dt">Taken</span>,<span class="st">&quot;893JJ&quot;</span>))
+    ,(<span class="dv">110</span>,(<span class="dt">Taken</span>,<span class="st">&quot;99292&quot;</span>))
+    ]</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Environment</span>
+<span class="kw">import qualified</span> <span class="dt">Data.ByteString.Lazy</span> <span class="kw">as</span> <span class="dt">B</span>
+<span class="kw">import qualified</span> <span class="dt">Data.ByteString</span> <span class="kw">as</span> <span class="dt">S</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  (fileName1<span class="fu">:</span>fileName2<span class="fu">:</span>_) <span class="ot">&lt;-</span> getArgs
+  copyFile fileName1 fileName2
+
+<span class="co">-- custom &quot;copyFile&quot; func to demonstrate ByeString package</span>
+<span class="ot">copyFile ::</span> FilePath <span class="ot">-&gt;</span> FilePath <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+copyFile source dest <span class="fu">=</span> <span class="kw">do</span>
+  contents <span class="ot">&lt;-</span> B.readFile source
+  B.writeFile dest contents</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">BinaryTree</span>
+( <span class="dt">Tree</span>(<span class="fu">..</span>)
+, singleton
+, treeInsert
+, treeElem ) <span class="kw">where</span>
+
+<span class="kw">data</span> <span class="dt">Tree</span> a <span class="fu">=</span> <span class="dt">EmptyTree</span> <span class="fu">|</span> <span class="dt">Node</span> a (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a) <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Read</span>, <span class="dt">Eq</span>)
+
+<span class="ot">singleton ::</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a
+singleton x <span class="fu">=</span> <span class="dt">Node</span> x <span class="dt">EmptyTree</span> <span class="dt">EmptyTree</span>
+
+<span class="ot">treeInsert ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a
+treeInsert x <span class="dt">EmptyTree</span> <span class="fu">=</span> <span class="dt">Node</span> x <span class="dt">EmptyTree</span> <span class="dt">EmptyTree</span>
+treeInsert x (<span class="dt">Node</span> y a b) <span class="fu">=</span> <span class="kw">case</span> (x <span class="ot">`compare`</span> y) <span class="kw">of</span>
+    <span class="dt">LT</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> y (treeInsert x a) b
+    <span class="dt">GT</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> y a (treeInsert x b)
+    <span class="dt">EQ</span> <span class="ot">-&gt;</span> <span class="dt">Node</span> y a b
+
+<span class="co">{-- or guards</span>
+<span class="co">treeInsert x (Node y a b)</span>
+<span class="co">    | x &lt; y  = Node y (treeInsert x a) b</span>
+<span class="co">    | x &gt; y  = Node y a (treeInsert x b)</span>
+<span class="co">    | x == y = Node y a b</span>
+<span class="co">--}</span>
+<span class="ot">treeElem ::</span> (<span class="dt">Ord</span> a) <span class="ot">=&gt;</span> a <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+treeElem x <span class="dt">EmptyTree</span> <span class="fu">=</span> <span class="dt">False</span>
+treeElem x (<span class="dt">Node</span> y a b)
+  <span class="fu">|</span> x <span class="fu">==</span> y    <span class="fu">=</span> <span class="dt">True</span>
+  <span class="fu">|</span> otherwise <span class="fu">=</span> treeElem x (<span class="kw">if</span> x <span class="fu">&lt;</span> y <span class="kw">then</span> a <span class="kw">else</span> b)
+
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Tree</span> <span class="kw">where</span>
+  fmap f <span class="dt">EmptyTree</span> <span class="fu">=</span> <span class="dt">EmptyTree</span>
+  fmap f (<span class="dt">Node</span> x a b) <span class="fu">=</span> <span class="dt">Node</span> (f x) (fmap f a) (fmap f b)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Geometry.Cube</span>
+( volume
+, area
+) <span class="kw">where</span>
+
+<span class="kw">import qualified</span> <span class="dt">Geometry.Cuboid</span> <span class="kw">as</span> <span class="dt">Cuboid</span>
+
+<span class="ot">volume ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+volume side <span class="fu">=</span> Cuboid.volume side side side
+
+<span class="ot">area ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+area side <span class="fu">=</span> Cuboid.area side side side</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Geometry.Cuboid</span>
+( volume
+, area
+) <span class="kw">where</span>
+
+<span class="ot">volume ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+volume a b c <span class="fu">=</span> rectangleArea a b <span class="fu">*</span> c
+
+<span class="ot">area ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+area a b c <span class="fu">=</span> rectangleArea a b <span class="fu">*</span> <span class="dv">2</span> <span class="fu">+</span> rectangleArea a c <span class="fu">*</span> <span class="dv">2</span> <span class="fu">+</span> rectangleArea c b <span class="fu">*</span> <span class="dv">2</span>
+
+<span class="ot">rectangleArea ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+rectangleArea a b <span class="fu">=</span> a <span class="fu">*</span> b</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Geometry.Sphere</span>
+( volume
+, area
+) <span class="kw">where</span>
+
+<span class="ot">volume ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+volume radius <span class="fu">=</span> (<span class="fl">4.0</span> <span class="fu">/</span> <span class="fl">3.0</span>) <span class="fu">*</span> pi <span class="fu">*</span> (radius <span class="fu">^</span> <span class="dv">3</span>)
+
+<span class="ot">area ::</span> <span class="dt">Float</span> <span class="ot">-&gt;</span> <span class="dt">Float</span>
+area radius <span class="fu">=</span> <span class="dv">4</span> <span class="fu">*</span> pi <span class="fu">*</span> (radius <span class="fu">^</span> <span class="dv">2</span>)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Environment</span>
+<span class="kw">import </span><span class="dt">Data.List</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  args <span class="ot">&lt;-</span> getArgs
+  progName <span class="ot">&lt;-</span> getProgName
+  putStrLn <span class="st">&quot;The args are:&quot;</span>
+  mapM putStrLn args
+  putStrLn <span class="st">&quot;The name is:&quot;</span>
+  putStrLn progName</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.IO</span>
+<span class="kw">import </span><span class="dt">Data.Char</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  contents <span class="ot">&lt;-</span> readFile <span class="st">&quot;input.txt&quot;</span>
+  writeFile <span class="st">&quot;output.txt&quot;</span> (map toUpper contents)
+
+<span class="co">{--</span>
+<span class="co">This is just short for </span>
+<span class="co">main = do</span>
+<span class="co">  handle &lt;- openFile &quot;input.txt&quot; ReadMode</span>
+<span class="co">  contents &lt;- hGetContents handle</span>
+<span class="co">  whandle &lt;- openFile &quot;output.txt&quot; WriteMode</span>
+<span class="co">  hPutStrLn whandle (map toUpper contents)</span>
+<span class="co">--}</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">main <span class="fu">=</span> putStrLn <span class="st">&quot;Hello World!&quot;</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+
+<span class="co">{--</span>
+<span class="co">mapM f list === sequence . map f list</span>
+<span class="co">mapM_ throws away result</span>
+
+<span class="co">forM a b === mapM b a</span>
+<span class="co">--}</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  colors <span class="ot">&lt;-</span> forM [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>] (\a <span class="ot">-&gt;</span> <span class="kw">do</span>
+    putStrLn <span class="fu">$</span> <span class="st">&quot;Which color is mapped to &quot;</span> <span class="fu">++</span> show a <span class="fu">++</span> <span class="st">&quot;?&quot;</span>
+    color <span class="ot">&lt;-</span> getLine
+    return color)
+  putStrLn <span class="st">&quot;The colors that you associate with 1, 2, 3, and 4 are: &quot;</span>
+  mapM_ putStrLn colors</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  c <span class="ot">&lt;-</span> getChar
+  when (c <span class="fu">/=</span> <span class="ch">&#39; &#39;</span>) <span class="fu">$</span> <span class="kw">do</span>
+    putChar c
+    main
+
+<span class="co">-- &quot;when&quot; is imported from Control.Monad</span>
+<span class="co">-- it encapsulates the if (bool) then (some IO action) else return ()</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">main <span class="fu">=</span> <span class="kw">do</span>
+  line <span class="ot">&lt;-</span> getLine
+  <span class="kw">if</span> null line
+     <span class="kw">then</span> return () <span class="co">-- &quot;return&quot; is simply the inverse of &quot;&lt;-&quot;</span>
+     <span class="kw">else</span> <span class="kw">do</span>
+       putStrLn <span class="fu">$</span> reverseWords line
+       main
+
+<span class="ot">reverseWords ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span>
+reverseWords <span class="fu">=</span> unwords <span class="fu">.</span> map reverse <span class="fu">.</span> words</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">main <span class="fu">=</span> <span class="kw">do</span>
+  lines <span class="ot">&lt;-</span> sequence <span class="fu">.</span> take <span class="dv">3</span> <span class="fu">$</span> repeat getLine
+  print lines</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">main <span class="fu">=</span> <span class="kw">do</span>
+  putStrLn <span class="st">&quot;What&#39;s your first name?&quot;</span>
+  firstName <span class="ot">&lt;-</span> getLine
+  putStrLn <span class="st">&quot;What&#39;s your last name?&quot;</span>
+  lastName <span class="ot">&lt;-</span> getLine
+  putStrLn <span class="fu">$</span> <span class="st">&quot;Hi &quot;</span> <span class="fu">++</span> firstName <span class="fu">++</span> <span class="st">&quot; Mae &quot;</span> <span class="fu">++</span> lastName <span class="fu">++</span> <span class="st">&quot;!&quot;</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">{-- Applicative definition:</span>
+
+<span class="co">class (Functor f) =&gt; Applicative f where  </span>
+<span class="co">    pure :: a -&gt; f a  </span>
+<span class="co">    (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b</span>
+
+<span class="co">ex: pure (+3) &lt;*&gt; Just 9       == Just 12</span>
+
+<span class="co">Laws:</span>
+<span class="co">1. pure f &lt;*&gt; x         = fmap f x</span>
+<span class="co">2. pure id &lt;*&gt; v        = v</span>
+<span class="co">3. pure f &lt;*&gt; pure x    = pure (f x)</span>
+<span class="co">4. u &lt;*&gt; pure y         = pure ($ y) &lt;*&gt; u</span>
+
+<span class="co">--}</span>
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  a <span class="ot">&lt;-</span> (<span class="fu">++</span>) <span class="fu">&lt;$&gt;</span> getLine <span class="fu">&lt;*&gt;</span> getLine
+  putStrLn <span class="fu">$</span> <span class="st">&quot;The two lines concatted: &quot;</span> <span class="fu">++</span> a
+
+<span class="co">{--</span>
+
+<span class="co">liftA2 :: (Applicative f) =&gt; (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c  </span>
+<span class="co">liftA2 f a b = f &lt;$&gt; a &lt;*&gt; b </span>
+
+<span class="co">takes a binary function and promotes it to a function that operates on two functors</span>
+
+<span class="co">ex: liftA2 (:) (Just 3) (Just [4])      == Just [3,4]</span>
+
+<span class="co">--}</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Prob</span> <span class="kw">where</span>
+<span class="kw">import </span><span class="dt">Control.Applicative</span>
+<span class="kw">import </span><span class="dt">Control.Monad</span> (liftM, ap)
+<span class="kw">import </span><span class="dt">Data.Ratio</span> <span class="co">-- 1%5 == 1/5</span>
+<span class="co">-- Lets try to add probabilities to the nondeterminism of lists</span>
+<span class="co">-- so that 3 has 50% chance of happening, 5,9 have 25% in [3,5,9]</span>
+<span class="co">-- [ (3,0.5), (5,0.25), (9,0.25) ]</span>
+
+<span class="kw">newtype</span> <span class="dt">Prob</span> a <span class="fu">=</span> <span class="dt">Prob</span> {<span class="ot"> getProb ::</span> [(a,<span class="dt">Rational</span>)] } <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="kw">instance</span> <span class="dt">Functor</span> <span class="dt">Prob</span> <span class="kw">where</span>
+    fmap f (<span class="dt">Prob</span> xs) <span class="fu">=</span> <span class="dt">Prob</span> <span class="fu">$</span> map (\(x,p) <span class="ot">-&gt;</span> (f x,p)) xs
+<span class="kw">instance</span> <span class="dt">Applicative</span> <span class="dt">Prob</span> <span class="kw">where</span>
+    pure <span class="fu">=</span> return
+    (<span class="fu">&lt;*&gt;</span>) <span class="fu">=</span> ap
+
+<span class="co">-- To make Prob into a monad, &gt;&gt;= is tricky to think about, however join (fmap f m) is not so bad.</span>
+<span class="co">-- Join inner probabilities as we would in math, by multiplying:</span>
+<span class="co">-- Prob [</span>
+<span class="co">--      (Prob [(&#39;a&#39;, 1%2), (&#39;b&#39;, 1%2)], 1%4),</span>
+<span class="co">--      (Prob [(&#39;c&#39;, 1%2), (&#39;d&#39;, 1%2)], 3%4),</span>
+<span class="co">--      ] =</span>
+<span class="co">--      Prob [(&#39;a&#39;, 1%8), (&#39;b&#39;, 1%8), (&#39;c&#39;, 3%8), (&#39;c&#39;, 3%8)]</span>
+
+<span class="ot">flatten ::</span> <span class="dt">Prob</span> (<span class="dt">Prob</span> a) <span class="ot">-&gt;</span> <span class="dt">Prob</span> a
+flatten (<span class="dt">Prob</span> xs) <span class="fu">=</span> <span class="dt">Prob</span> <span class="fu">$</span> concat <span class="fu">$</span> map multAll xs
+    <span class="kw">where</span> multAll (<span class="dt">Prob</span> ys,p) <span class="fu">=</span> map (\(x,r) <span class="ot">-&gt;</span> (x,p<span class="fu">*</span>r)) ys
+
+<span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Prob</span> <span class="kw">where</span>
+    return x <span class="fu">=</span> <span class="dt">Prob</span> [(x, <span class="dv">1</span><span class="fu">%</span><span class="dv">1</span>)]
+    m <span class="fu">&gt;&gt;=</span> f <span class="fu">=</span> flatten (fmap f m)
+    fail _ <span class="fu">=</span> <span class="dt">Prob</span> []
+
+<span class="kw">data</span> <span class="dt">Coin</span> <span class="fu">=</span> <span class="dt">Heads</span> <span class="fu">|</span> <span class="dt">Tails</span> <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)
+
+<span class="ot">coin ::</span> <span class="dt">Prob</span> <span class="dt">Coin</span>
+coin <span class="fu">=</span> <span class="dt">Prob</span> [(<span class="dt">Heads</span>, <span class="dv">1</span><span class="fu">%</span><span class="dv">2</span>), (<span class="dt">Tails</span>, <span class="dv">1</span><span class="fu">%</span><span class="dv">2</span>)]
+
+<span class="ot">trickCoin ::</span> <span class="dt">Prob</span> <span class="dt">Coin</span>
+trickCoin <span class="fu">=</span> <span class="dt">Prob</span> [(<span class="dt">Heads</span>, <span class="dv">1</span><span class="fu">%</span><span class="dv">10</span>), (<span class="dt">Tails</span>, <span class="dv">9</span><span class="fu">%</span><span class="dv">10</span>)]
+
+<span class="co">-- Flip 2 normal coins and 1 trick coin -- what are the chances all are tails?</span>
+<span class="ot">flipThree ::</span> <span class="dt">Prob</span> <span class="dt">Bool</span>
+flipThree <span class="fu">=</span> <span class="kw">do</span>
+    a <span class="ot">&lt;-</span> coin
+    b <span class="ot">&lt;-</span> coin
+    c <span class="ot">&lt;-</span> trickCoin
+    return (all (<span class="fu">==</span><span class="dt">Tails</span>) [a,b,c])</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">CustomState</span> <span class="kw">where</span>
+<span class="kw">import </span><span class="dt">Control.Applicative</span>
+<span class="kw">import </span><span class="dt">Control.Monad</span> (liftM, ap)
+<span class="co">-- While functions&#39; inability to change global state/variables leads to better programs,</span>
+<span class="co">-- some problems are inherently stateful</span>
+<span class="co">-- This can be tedious in Haskell, but the state monad helps</span>
+
+<span class="kw">type</span> <span class="dt">Stack</span> <span class="fu">=</span> [<span class="dt">Int</span>]
+
+<span class="ot">pop&#39; ::</span> <span class="dt">Stack</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>,<span class="dt">Stack</span>)
+pop&#39; (x<span class="fu">:</span>xs) <span class="fu">=</span> (x,xs)
+
+<span class="ot">push&#39; ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Stack</span> <span class="ot">-&gt;</span> ((),<span class="dt">Stack</span>)
+push&#39; a xs <span class="fu">=</span> ((),a<span class="fu">:</span>xs)
+
+<span class="co">-- stackOps&#39; [1,2,3,4] == (1,[2,3,4])</span>
+<span class="ot">stackOps&#39; ::</span> <span class="dt">Stack</span> <span class="ot">-&gt;</span> (<span class="dt">Int</span>, <span class="dt">Stack</span>)
+stackOps&#39; stack <span class="fu">=</span> <span class="kw">let</span>
+    ((),secondStack) <span class="fu">=</span> push&#39; <span class="dv">3</span> stack
+    (a ,thirdStack)  <span class="fu">=</span> pop&#39; secondStack
+    <span class="kw">in</span> pop&#39; thirdStack
+
+<span class="co">-- ^^ A bit tedious. enter the State monad</span>
+
+<span class="kw">newtype</span> <span class="dt">State</span> s a <span class="fu">=</span> <span class="dt">State</span> {<span class="ot"> runState ::</span> s <span class="ot">-&gt;</span> (a,s) }
+
+<span class="kw">instance</span> <span class="dt">Functor</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+    fmap <span class="fu">=</span> liftM
+<span class="kw">instance</span> <span class="dt">Applicative</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+    pure <span class="fu">=</span> return
+    (<span class="fu">&lt;*&gt;</span>) <span class="fu">=</span> ap
+<span class="kw">instance</span> <span class="dt">Monad</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+    return x <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> (x,s)
+    (<span class="dt">State</span> h) <span class="fu">&gt;&gt;=</span> f <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> <span class="kw">let</span> (a, newState) <span class="fu">=</span> h s
+                                        (<span class="dt">State</span> g) <span class="fu">=</span> f a
+                                    <span class="kw">in</span> g newState
+<span class="ot">pop ::</span> <span class="dt">State</span> <span class="dt">Stack</span> <span class="dt">Int</span>
+pop <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \(x<span class="fu">:</span>xs) <span class="ot">-&gt;</span> (x,xs)
+
+<span class="ot">push ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">State</span> <span class="dt">Stack</span> ()
+push a <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \xs <span class="ot">-&gt;</span> ((),a<span class="fu">:</span>xs)
+
+<span class="co">-- Note, we are NOT passing stateful stack as an argument -- thats what we wanted to avoid, huzzah</span>
+<span class="ot">stackOps ::</span> <span class="dt">State</span> <span class="dt">Stack</span> <span class="dt">Int</span>
+stackOps <span class="fu">=</span> <span class="kw">do</span>
+    push <span class="dv">3</span>
+    pop
+    pop
+
+<span class="ot">stackStuff ::</span> <span class="dt">State</span> <span class="dt">Stack</span> ()
+stackStuff <span class="fu">=</span> <span class="kw">do</span>
+    a <span class="ot">&lt;-</span> pop
+    <span class="kw">if</span> a <span class="fu">==</span> <span class="dv">5</span> <span class="kw">then</span> push <span class="dv">5</span> <span class="kw">else</span> <span class="kw">do</span>
+        push <span class="dv">3</span>
+        push <span class="dv">8</span>
+
+<span class="ot">combinedOps ::</span> <span class="dt">State</span> <span class="dt">Stack</span> ()
+combinedOps <span class="fu">=</span> <span class="kw">do</span>
+    a <span class="ot">&lt;-</span> stackOps
+    <span class="kw">if</span> a <span class="fu">==</span> <span class="dv">100</span>
+       <span class="kw">then</span> stackStuff
+       <span class="kw">else</span> return ()
+
+<span class="co">-- MonadState implements get and put as below</span>
+
+get <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> (s,s)
+put newState <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> ((), newState)
+
+<span class="ot">stackyStack ::</span> <span class="dt">State</span> <span class="dt">Stack</span> ()
+stackyStack <span class="fu">=</span> <span class="kw">do</span>
+    stackNow <span class="ot">&lt;-</span> get
+    <span class="kw">if</span> stackNow <span class="fu">==</span> [<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>]
+       <span class="kw">then</span> put [<span class="dv">8</span>,<span class="dv">3</span>,<span class="dv">1</span>]
+       <span class="kw">else</span> put [<span class="dv">9</span>,<span class="dv">2</span>,<span class="dv">1</span>]</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Data.Char</span>
+<span class="kw">import </span><span class="dt">Data.List</span>
+<span class="co">-- This is one way</span>
+<span class="co">{--</span>
+<span class="co">main = do line &lt;- getLine</span>
+<span class="co">          let line&#39; = reverse line</span>
+<span class="co">          putStrLn $ &quot;You said &quot; ++ line&#39; ++ &quot; backwards&quot;</span>
+<span class="co">--}</span>
+
+<span class="co">{-- FUNCTOR LAWS</span>
+
+<span class="co">1. If we map the id function over a functor, the functor that we get back should be the same as the original functor</span>
+
+<span class="co">2. Composing two functions and then mapping the resulting function over a functor should be the same as first mapping one function over the functor and then mapping the other one</span>
+
+
+
+<span class="co">-- But we can use fmap since we have instance Functor IO</span>
+<span class="co">main = do line &lt;- fmap (intersperse &#39;-&#39; . reverse . map toUpper) getLine</span>
+<span class="co">          putStrLn $ &quot;You said &quot; ++ line ++ &quot; backwards&quot;</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Knight</span> <span class="kw">where</span>
+<span class="kw">import </span><span class="dt">Control.Monad</span>
+
+<span class="kw">type</span> <span class="dt">KnightPos</span> <span class="fu">=</span> (<span class="dt">Int</span>,<span class="dt">Int</span>)
+
+<span class="co">-- using guard in do block</span>
+<span class="ot">possibleMoves ::</span> <span class="dt">KnightPos</span> <span class="ot">-&gt;</span> [<span class="dt">KnightPos</span>]
+possibleMoves (c,r) <span class="fu">=</span> <span class="kw">do</span>
+  (c&#39;,r&#39;) <span class="ot">&lt;-</span> [(c<span class="fu">+</span><span class="dv">2</span>,r<span class="fu">-</span><span class="dv">1</span>),(c<span class="fu">+</span><span class="dv">2</span>,r<span class="fu">+</span><span class="dv">1</span>),(c<span class="fu">-</span><span class="dv">2</span>,r<span class="fu">-</span><span class="dv">1</span>),(c<span class="fu">-</span><span class="dv">2</span>,r<span class="fu">+</span><span class="dv">1</span>)
+             ,(c<span class="fu">+</span><span class="dv">1</span>,r<span class="fu">-</span><span class="dv">2</span>),(c<span class="fu">+</span><span class="dv">1</span>,r<span class="fu">+</span><span class="dv">2</span>),(c<span class="fu">-</span><span class="dv">1</span>,r<span class="fu">-</span><span class="dv">2</span>),(c<span class="fu">-</span><span class="dv">1</span>,r<span class="fu">+</span><span class="dv">2</span>)
+             ]
+  guard (c&#39; <span class="ot">`elem`</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">8</span>] <span class="fu">&amp;&amp;</span> r&#39; <span class="ot">`elem`</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">8</span>])
+  return (c&#39;,r&#39;)
+
+<span class="co">-- monad lists really allow easy syntax for nondeterminism</span>
+<span class="ot">in3 ::</span> <span class="dt">KnightPos</span> <span class="ot">-&gt;</span> [<span class="dt">KnightPos</span>]
+in3 start <span class="fu">=</span> <span class="kw">do</span>
+  first <span class="ot">&lt;-</span> possibleMoves start
+  second <span class="ot">&lt;-</span> possibleMoves first
+  possibleMoves second
+
+<span class="co">-- using &gt;&gt;= notation</span>
+<span class="ot">in3&#39; ::</span> <span class="dt">KnightPos</span> <span class="ot">-&gt;</span> [<span class="dt">KnightPos</span>]
+in3&#39; start <span class="fu">=</span> return start <span class="fu">&gt;&gt;=</span> possibleMoves <span class="fu">&gt;&gt;=</span> possibleMoves <span class="fu">&gt;&gt;=</span> possibleMoves
+
+<span class="co">-- but how can we make the &quot;3&quot; dynamic??? hmmm</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">MiscFuncs</span> <span class="kw">where</span>
+<span class="kw">import </span><span class="dt">Control.Monad</span>
+<span class="kw">import </span><span class="dt">Control.Monad.Trans.Writer</span>
+<span class="kw">import </span><span class="dt">Knight</span>
+<span class="co">{-- liftM === fmap as long as laws are satisfied</span>
+
+<span class="co">liftM :: (Monad m)  =&gt; (a -&gt; b) -&gt; m a -&gt; m b</span>
+<span class="co">fmap :: (Functor f) =&gt; (a -&gt; b) -&gt; f a -&gt; f b</span>
+
+<span class="co">liftM f m = m &gt;&gt;= (\x -&gt; return f x)</span>
+<span class="co">liftM f m = do</span>
+<span class="co">    x &lt;- m</span>
+<span class="co">    return (f x)</span>
+
+<span class="co">--- ap === &lt;*&gt; as long as laws are satisfied</span>
+
+<span class="co">ap  :: (Monad m)       =&gt; m (a -&gt; b) -&gt; m a -&gt; m b</span>
+<span class="co">&lt;*&gt; :: (Applicative f) =&gt; f (a -&gt; b) -&gt; f a -&gt; f b</span>
+
+<span class="co">ap mf m = do</span>
+<span class="co">    f &lt;- mf</span>
+<span class="co">    x &lt;- m</span>
+<span class="co">    return (f x)</span>
+
+<span class="co">--- join flattens monadic values</span>
+<span class="co">join :: (Monad m) =&gt; m (m a) -&gt; m a</span>
+<span class="co">join mm = do</span>
+<span class="co">    m &lt;- mm</span>
+<span class="co">    m</span>
+
+<span class="co">--- WHOA ---</span>
+<span class="co">m &gt;&gt;= f  ===  join (fmap f m)</span>
+
+<span class="co">This makes sense.. f :: a -&gt; m a, so mapping results in nested monadic values... join just unnests them.</span>
+
+
+<span class="co">filterM :: (Monad m) =&gt; (a -&gt; m Bool) -&gt; [a] -&gt; m [a]</span>
+<span class="co">--}</span>
+<span class="ot">keepSmall ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">Bool</span>
+keepSmall x
+    <span class="fu">|</span> x <span class="fu">&lt;</span> <span class="dv">4</span> <span class="fu">=</span> <span class="kw">do</span>
+        tell [<span class="st">&quot;Keeping &quot;</span> <span class="fu">++</span> show x]
+        return <span class="dt">True</span>
+    <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="kw">do</span>
+        tell [<span class="st">&quot;Tossing &quot;</span> <span class="fu">++</span> show x]
+        return <span class="dt">False</span>
+
+<span class="ot">powerset ::</span> [a] <span class="ot">-&gt;</span> [[a]]
+powerset <span class="fu">=</span> filterM (\x <span class="ot">-&gt;</span> [<span class="dt">True</span>, <span class="dt">False</span>])
+<span class="co">{--</span>
+<span class="co">foldl ::              (a -&gt; b -&gt; a)   -&gt; a -&gt; [b] -&gt; a</span>
+<span class="co">foldM :: (Monad m) =&gt; (a -&gt; b -&gt; m a) -&gt; a -&gt; [b] -&gt; m a</span>
+<span class="co">--}</span>
+<span class="ot">binSmalls ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span>
+binSmalls acc x
+    <span class="fu">|</span> x <span class="fu">&gt;</span> <span class="dv">9</span>     <span class="fu">=</span> <span class="dt">Nothing</span>
+    <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="dt">Just</span> (acc <span class="fu">+</span> x)
+<span class="co">-- &gt;&gt;&gt; foldM binSmalls 0 [1,2,3]</span>
+<span class="co">-- Just 6</span>
+<span class="co">-- &gt;&gt;&gt; foldM binSmalls 0 [1,2,3,10,4]</span>
+<span class="co">-- Nothing</span>
+
+<span class="co">-- A less error prone RPN calculator</span>
+<span class="ot">readMaybe ::</span> (<span class="dt">Read</span> a) <span class="ot">=&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> a
+readMaybe st <span class="fu">=</span> <span class="kw">case</span> reads st <span class="kw">of</span>
+    [(x,<span class="st">&quot;&quot;</span>)] <span class="ot">-&gt;</span> <span class="dt">Just</span> x
+    _        <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+
+<span class="ot">foldingFunction ::</span> [<span class="dt">Double</span>] <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> [<span class="dt">Double</span>]
+foldingFunction (x<span class="fu">:</span>y<span class="fu">:</span>ys) <span class="st">&quot;*&quot;</span> <span class="fu">=</span> return ((x<span class="fu">*</span>y)<span class="fu">:</span>ys)
+foldingFunction (x<span class="fu">:</span>y<span class="fu">:</span>ys) <span class="st">&quot;+&quot;</span> <span class="fu">=</span> return ((x<span class="fu">+</span>y)<span class="fu">:</span>ys)
+foldingFunction (x<span class="fu">:</span>y<span class="fu">:</span>ys) <span class="st">&quot;-&quot;</span> <span class="fu">=</span> return ((y<span class="fu">-</span>x)<span class="fu">:</span>ys)
+foldingFunction xs numStr <span class="fu">=</span> liftM (<span class="fu">:</span>xs) (readMaybe numStr)
+
+<span class="ot">solveRPN ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Double</span>
+solveRPN st <span class="fu">=</span> <span class="kw">do</span>
+    [result] <span class="ot">&lt;-</span> foldM foldingFunction [] (words st)
+    <span class="co">-- [result] utilizes Maybe monad pattern matching resulting in Nothing</span>
+    return result
+
+<span class="co">-- Improve knight function (in3 =&gt; inX)</span>
+<span class="ot">inX ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">KnightPos</span> <span class="ot">-&gt;</span> [<span class="dt">KnightPos</span>]
+inX x start <span class="fu">=</span> return start <span class="fu">&gt;&gt;=</span> foldr (<span class="fu">&lt;=&lt;</span>) return (replicate x possibleMoves)
+<span class="co">-- ^ dope pattern ! (&lt;=&lt;) is monadic func composition, initial starting function is return (like id)</span>
+
+<span class="ot">canReachIn ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">KnightPos</span> <span class="ot">-&gt;</span> <span class="dt">KnightPos</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+canReachIn x start end <span class="fu">=</span> end <span class="ot">`elem`</span> inX x start</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">{--</span>
+
+<span class="co">Monads</span>
+
+<span class="co">- A natural extension of applicative functors. If we have a value with context `m a`</span>
+<span class="co">and a function `(a -&gt; m b)` that takes a &quot;normal&quot; value `a` but returns a value</span>
+<span class="co">with context `m b`, how do we feed the context value `m a` into the function?</span>
+
+<span class="co">class Monad m where</span>
+<span class="co">  return :: a -&gt; m a</span>
+<span class="co">  (&gt;&gt;=) :: m a -&gt; (a -&gt; m b) -&gt; m b</span>
+<span class="co">  (&gt;&gt;) :: m a -&gt; m b -&gt; m b</span>
+<span class="co">  x &gt;&gt; y = x &gt;&gt;= \_ -&gt; y</span>
+<span class="co">  fail :: String -&gt; m a</span>
+<span class="co">  fail msg = error msg</span>
+
+<span class="co">Laws:</span>
+<span class="co">1. return x &gt;&gt;= f   = fx</span>
+<span class="co">2. m &gt;&gt;= return     = m</span>
+<span class="co">3. (m &gt;&gt;= f) &gt;&gt;= g  = m &gt;&gt;= (\x -&gt; fx &gt;&gt;= g)</span>
+
+<span class="co">Equivalent Laws:</span>
+<span class="co">1. f &lt;=&lt; return    = f</span>
+<span class="co">2. return &lt;=&lt; f    = f</span>
+<span class="co">3. f &lt;=&lt; (g &lt;=&lt; h) = (f &lt;=&lt; g) &lt;=&lt; h</span>
+
+<span class="co">--}</span>
+
+<span class="co">-- Conceptualize bind (&gt;&gt;=)</span>
+<span class="ot">applyMaybe ::</span> <span class="dt">Maybe</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b) <span class="ot">-&gt;</span> <span class="dt">Maybe</span> b
+applyMaybe <span class="dt">Nothing</span> f  <span class="fu">=</span> <span class="dt">Nothing</span>
+applyMaybe (<span class="dt">Just</span> x) f <span class="fu">=</span> f x
+
+<span class="co">{--</span>
+
+<span class="co">instance Monad Maybe where</span>
+<span class="co">  return x = Just x</span>
+<span class="co">  Nothing &gt;&gt;= f = Nothing</span>
+<span class="co">  Just x &gt;&gt;= f = fx</span>
+<span class="co">  fail _ = Nothing</span>
+<span class="co">--}</span>
+
+<span class="co">-- Pierre falls if the sides of the pole differ by &gt; 3 birds</span>
+<span class="kw">type</span> <span class="dt">Birds</span> <span class="fu">=</span> <span class="dt">Int</span>
+<span class="kw">type</span> <span class="dt">Pole</span> <span class="fu">=</span> (<span class="dt">Birds</span>, <span class="dt">Birds</span>)
+
+<span class="ot">landLeft ::</span> <span class="dt">Birds</span> <span class="ot">-&gt;</span> <span class="dt">Pole</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Pole</span>
+landLeft n (l, r)
+  <span class="fu">|</span> abs ((l <span class="fu">+</span> n) <span class="fu">-</span> r) <span class="fu">&lt;</span> <span class="dv">4</span> <span class="fu">=</span> <span class="dt">Just</span> (l <span class="fu">+</span> n, r)
+  <span class="fu">|</span> otherwise             <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">landRight ::</span> <span class="dt">Birds</span> <span class="ot">-&gt;</span> <span class="dt">Pole</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Pole</span>
+landRight n (l, r)
+  <span class="fu">|</span> abs (l <span class="fu">-</span> (r <span class="fu">+</span> n)) <span class="fu">&lt;</span> <span class="dv">4</span> <span class="fu">=</span> <span class="dt">Just</span> (l, r <span class="fu">+</span> n)
+  <span class="fu">|</span> otherwise             <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">(-:) ::</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b
+x <span class="fu">-:</span> f <span class="fu">=</span> f x
+
+<span class="co">-- (0,0) -: landRight 3 -: (&gt;&gt;= landLeft 1) -: (&gt;&gt;= landLeft 5) -- OR</span>
+<span class="co">-- return (0,0) &gt;&gt;= landRight 3 &gt;&gt;= landLeft 1 &gt;&gt;= landLeft 5</span>
+<span class="co">-- Just (6,3)</span>
+
+<span class="co">-- return (0,0) &gt;&gt;= landRight 3 &gt;&gt;= landLeft 1 &gt;&gt;= landLeft 5 &gt;&gt;= landLeft 1</span>
+<span class="co">-- Nothing</span>
+
+<span class="co">{-- do notation</span>
+
+<span class="co">do is for all monads, not just IO!</span>
+
+<span class="co">-- return (0,0) &gt;&gt;= landRight 3 &gt;&gt;= landLeft 1 &gt;&gt;= landLeft 5 -- OR</span>
+<span class="co">--}</span>
+
+<span class="ot">routine ::</span> <span class="dt">Maybe</span> <span class="dt">Pole</span>
+routine <span class="fu">=</span> <span class="kw">do</span>
+  start <span class="ot">&lt;-</span> return (<span class="dv">0</span>,<span class="dv">0</span>)
+  first <span class="ot">&lt;-</span> landRight <span class="dv">3</span> start
+  second <span class="ot">&lt;-</span> landLeft <span class="dv">1</span> first
+  landLeft <span class="dv">5</span> second
+
+<span class="ot">justH ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span>
+justH <span class="fu">=</span> <span class="kw">do</span>
+  (x<span class="fu">:</span>xs) <span class="ot">&lt;-</span> <span class="dt">Just</span> <span class="st">&quot;hello&quot;</span>
+  return x
+
+<span class="ot">wopwop ::</span> <span class="dt">Maybe</span> <span class="dt">Char</span>
+wopwop <span class="fu">=</span> <span class="kw">do</span>
+  (x<span class="fu">:</span>xs) <span class="ot">&lt;-</span> <span class="dt">Just</span> <span class="st">&quot;&quot;</span> <span class="co">-- failed pattern matching calls monad :: fail</span>
+  return <span class="ch">&#39;x&#39;</span>        <span class="co">-- Maybe implements fail _ = Nothing</span>
+
+
+<span class="co">-- Lists as Monads</span>
+
+<span class="co">-- ghci&gt; [1,2] &gt;&gt;= \n -&gt; [&#39;a&#39;,&#39;b&#39;] &gt;&gt;= \ch -&gt; return (n,ch)</span>
+<span class="co">--      [(1,&#39;a&#39;),(1,&#39;b&#39;),(2,&#39;a&#39;),(2,&#39;b&#39;)]</span>
+<span class="co">-- equivalent to</span>
+<span class="ot">listOfTuples ::</span> [(<span class="dt">Int</span>, <span class="dt">Char</span>)]
+listOfTuples <span class="fu">=</span> <span class="kw">do</span>
+  n <span class="ot">&lt;-</span> [<span class="dv">1</span>,<span class="dv">2</span>]
+  ch <span class="ot">&lt;-</span> [<span class="ch">&#39;a&#39;</span>,<span class="ch">&#39;b&#39;</span>]
+  return (n,ch)
+
+<span class="co">-- whoa.. looks like list comprehension</span>
+<span class="co">-- turns out both do and list comprehensions are just syntactic sugar around &gt;&gt;=</span>
+<span class="co">-- listExample = [ (n,ch) | n &lt;- [1,2], ch &lt;- [&#39;a&#39;,&#39;b&#39;] ]</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">Control.Monad</span>
+<span class="co">{--</span>
+<span class="co">  MonadPlus is for monads that can also act as monoids</span>
+
+<span class="co">class Monad m =&gt; MonadPlus m where</span>
+<span class="co">  mzero :: m a</span>
+<span class="co">  mplus :: m a -&gt; m a -&gt; m a</span>
+
+<span class="co">instance MonadPlus [] where</span>
+<span class="co">  mzero = []</span>
+<span class="co">  mplus = (++)</span>
+
+<span class="co">guard :: (MonadPlus m) =&gt; Bool -&gt; m ()</span>
+<span class="co">guard True = return ()</span>
+<span class="co">guard False = mzero</span>
+
+<span class="co">--}</span>
+
+<span class="co">-- using binds</span>
+<span class="ot">luckyNumbers ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+luckyNumbers xs <span class="fu">=</span> xs <span class="fu">&gt;&gt;=</span> (\x <span class="ot">-&gt;</span> guard (<span class="ch">&#39;7&#39;</span> <span class="ot">`elem`</span> show x) <span class="fu">&gt;&gt;</span> return x)
+
+<span class="co">-- using do</span>
+<span class="ot">luckyNumbers&#39;&#39;&#39; ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+luckyNumbers&#39;&#39;&#39; xs <span class="fu">=</span> <span class="kw">do</span>
+  x <span class="ot">&lt;-</span> xs
+  guard (<span class="ch">&#39;7&#39;</span> <span class="ot">`elem`</span> show x)
+  return x
+
+<span class="co">-- list comprehension</span>
+<span class="ot">luckyNumbers&#39;&#39; ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+luckyNumbers&#39;&#39; xs <span class="fu">=</span> [ x <span class="fu">|</span> x <span class="ot">&lt;-</span> xs, <span class="ch">&#39;7&#39;</span> <span class="ot">`elem`</span> show x]
+
+<span class="co">-- filter func</span>
+<span class="ot">luckyNumbers&#39; ::</span> [<span class="dt">Int</span>] <span class="ot">-&gt;</span> [<span class="dt">Int</span>]
+luckyNumbers&#39; <span class="fu">=</span> filter (elem <span class="ch">&#39;7&#39;</span> <span class="fu">.</span> show)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Random</span>
+<span class="kw">import </span><span class="dt">CustomState</span>
+<span class="ot">randomSt ::</span> (<span class="dt">RandomGen</span> g, <span class="dt">Random</span> a) <span class="ot">=&gt;</span> <span class="dt">State</span> g a
+randomSt <span class="fu">=</span> <span class="dt">State</span> random
+
+<span class="co">-- improving the old 3 coin toss</span>
+<span class="ot">threeCoins ::</span> <span class="dt">State</span> <span class="dt">StdGen</span> (<span class="dt">Bool</span>,<span class="dt">Bool</span>,<span class="dt">Bool</span>)
+threeCoins <span class="fu">=</span> <span class="kw">do</span>
+    a <span class="ot">&lt;-</span> randomSt
+    b <span class="ot">&lt;-</span> randomSt
+    c <span class="ot">&lt;-</span> randomSt
+    return (a,b,c)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">ReaderStuff</span> <span class="kw">where</span>
+<span class="co">-- Remember ( (-&gt;) r ) is both a functor and applicative</span>
+<span class="co">-- fmap (*5) (+3)  ===  (*5) &lt;$&gt; (+3)  === (*5) . (+3)  ===  \x -&gt; (x+3) * 5</span>
+
+<span class="co">-- &gt;&gt;&gt; let f = (+) &lt;$&gt; (*2) &lt;*&gt; (+10)   ====   ( (+) &lt;$&gt; (*2) ) &lt;*&gt; (+10)</span>
+<span class="co">-- --- === \x -&gt; (x*2) + (x+10)</span>
+<span class="co">-- &gt;&gt;&gt; f 3</span>
+<span class="co">-- 19</span>
+
+
+<span class="co">{-- Functions (r -&gt;) as Monads</span>
+
+<span class="co">instance Monad ((-&gt;) r) where</span>
+<span class="co">    return x = \_ -&gt; x</span>
+<span class="co">    h &gt;&gt;= f = \w -&gt; f (h w) w</span>
+
+<span class="co">--}</span>
+
+<span class="co">-- accomplishes the &lt;$&gt; &lt;*&gt; stuff above, relying on monad capabilities</span>
+<span class="ot">addStuff ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+addStuff <span class="fu">=</span> <span class="kw">do</span>
+    a <span class="ot">&lt;-</span> (<span class="fu">*</span><span class="dv">2</span>)
+    b <span class="ot">&lt;-</span> (<span class="fu">+</span><span class="dv">10</span>)
+    return (a<span class="fu">+</span>b)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Monads.Writer</span> (
+    gcd,
+    gcd&#39;,
+    gcdReverse
+    ) <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">Data.Monoid</span>
+<span class="kw">import </span><span class="dt">Control.Monad.Trans.Writer</span>
+
+<span class="co">-- Keeping a &quot;log&quot; context</span>
+<span class="ot">isBigGang&#39; ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span>
+isBigGang&#39; x <span class="fu">=</span> x <span class="fu">&gt;</span> <span class="dv">9</span>
+
+<span class="ot">isBigGang ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Bool</span>, <span class="dt">String</span>)
+isBigGang x <span class="fu">=</span> (x <span class="fu">&gt;</span> <span class="dv">9</span>, <span class="st">&quot;Compared gang size to 9.&quot;</span>)
+
+<span class="co">-- But what about chaining and feeding contextual values (x, log) into this function?</span>
+<span class="co">-- &gt;&gt;= of course</span>
+<span class="ot">applyLog&#39; ::</span> (a,<span class="dt">String</span>) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> (b,<span class="dt">String</span>)) <span class="ot">-&gt;</span> (b,<span class="dt">String</span>)
+applyLog&#39; (x,log) f <span class="fu">=</span> <span class="kw">let</span> (y,newLog) <span class="fu">=</span> f x <span class="kw">in</span> (y,log <span class="fu">++</span> newLog)
+
+<span class="co">-- applyLog can be made more general, anything that accepts binary (++)</span>
+<span class="ot">applyLog&#39;&#39; ::</span> (a,[c]) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> (b,[c])) <span class="ot">-&gt;</span> (b,[c])
+applyLog&#39;&#39; (x,log) f <span class="fu">=</span> <span class="kw">let</span> (y,newLog) <span class="fu">=</span> f x <span class="kw">in</span> (y,log <span class="fu">++</span> newLog)
+
+<span class="co">-- the notion of appending is even more general. lets extend this to all monoids !</span>
+<span class="ot">applyLog ::</span> (<span class="dt">Monoid</span> m) <span class="ot">=&gt;</span> (a,m) <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> (b,m)) <span class="ot">-&gt;</span> (b,m)
+applyLog (x,log) f <span class="fu">=</span> <span class="kw">let</span> (y,newLog) <span class="fu">=</span> f x <span class="kw">in</span> (y,log <span class="ot">`mappend`</span> newLog)
+
+<span class="co">-- now we can stop thinking about (value, log) tuple, and just as a value with accompanying monoid</span>
+<span class="kw">type</span> <span class="dt">Food</span> <span class="fu">=</span> <span class="dt">String</span>
+<span class="kw">type</span> <span class="dt">Price</span> <span class="fu">=</span> <span class="dt">Sum</span> <span class="dt">Int</span> <span class="co">-- recall Sum is a newtype for Int implementing a monoid with &quot;sum&quot; binary</span>
+<span class="ot">addDrink ::</span> <span class="dt">Food</span> <span class="ot">-&gt;</span> (<span class="dt">Food</span>, <span class="dt">Price</span>)
+addDrink <span class="st">&quot;beans&quot;</span> <span class="fu">=</span> (<span class="st">&quot;milk&quot;</span>, <span class="dt">Sum</span> <span class="dv">25</span>)
+addDrink <span class="st">&quot;jerky&quot;</span> <span class="fu">=</span> (<span class="st">&quot;whiskey&quot;</span>, <span class="dt">Sum</span> <span class="dv">99</span>)
+addDrink _ <span class="fu">=</span> (<span class="st">&quot;beer&quot;</span>, <span class="dt">Sum</span> <span class="dv">30</span>)
+
+<span class="co">----------------------------------------------------------------------</span>
+<span class="co">-- Writer</span>
+
+<span class="co">{--</span>
+
+<span class="co">newtype Writer w a = Writer { runWriter :: (a, w) }</span>
+
+<span class="co">instance (Monoid w) =&gt; Monad (Writer w) where</span>
+<span class="co">return x = Writer (x, mempty)</span>
+<span class="co">(Writer (x,v)) &gt;&gt;= f = let (Writer (y, v&#39;)) = f x in Writer (y, v `mappend` v&#39;)</span>
+
+<span class="co">--}</span>
+
+<span class="ot">logNumber ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">Int</span>
+logNumber x <span class="fu">=</span> writer (x, [<span class="st">&quot;Got number: &quot;</span> <span class="fu">++</span> show x])
+
+<span class="ot">multWithLog ::</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">Int</span>
+multWithLog <span class="fu">=</span> <span class="kw">do</span>
+    a <span class="ot">&lt;-</span> logNumber <span class="dv">3</span>
+    b <span class="ot">&lt;-</span> logNumber <span class="dv">5</span>
+    tell [<span class="st">&quot;Gonna multiply these two nums&quot;</span>]
+    return (a<span class="fu">*</span>b)
+
+<span class="ot">gcd&#39;&#39; ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span>
+gcd&#39;&#39; a b
+    <span class="fu">|</span> b <span class="fu">==</span> <span class="dv">0</span>    <span class="fu">=</span> a
+    <span class="fu">|</span> otherwise <span class="fu">=</span> gcd&#39;&#39; b (a <span class="ot">`mod`</span> b)
+
+<span class="co">-- &gt;&gt;&gt; mapM_ putStrLn $ snd $ runWriter (gcd&#39; 8 3)</span>
+<span class="co">--</span>
+<span class="co">-- 8 mod 3 = 2</span>
+<span class="co">-- 3 mod 2 = 1</span>
+<span class="co">-- 2 mod 1 = 0</span>
+<span class="co">-- Finished with 1</span>
+<span class="ot">gcd&#39; ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">Int</span>
+gcd&#39; a b
+    <span class="fu">|</span> b <span class="fu">==</span> <span class="dv">0</span> <span class="fu">=</span> <span class="kw">do</span>
+        tell [<span class="st">&quot;Finished with &quot;</span> <span class="fu">++</span> show a]
+        return a
+    <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="kw">do</span>
+        tell [show a <span class="fu">++</span> <span class="st">&quot; mod &quot;</span> <span class="fu">++</span> show b <span class="fu">++</span> <span class="st">&quot; = &quot;</span> <span class="fu">++</span> show (a <span class="ot">`mod`</span> b)]
+        gcd&#39; b (a <span class="ot">`mod`</span> b)
+
+<span class="co">-- WATCH OUT - implementation below is not efficient due to right-side application of ++</span>
+<span class="co">-- &gt;&gt;&gt; mapM_ putStrLn $ snd $ runWriter (gcdReverse 8 3)</span>
+<span class="co">--</span>
+<span class="co">-- Finished with 1</span>
+<span class="co">-- 2 mod 1 = 0</span>
+<span class="co">-- 3 mod 2 = 1</span>
+<span class="co">-- 8 mod 3 = 2</span>
+<span class="ot">gcdReverse ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> [<span class="dt">String</span>] <span class="dt">Int</span>
+gcdReverse a b
+    <span class="fu">|</span> b <span class="fu">==</span> <span class="dv">0</span> <span class="fu">=</span> <span class="kw">do</span>
+        tell [<span class="st">&quot;Finished with &quot;</span> <span class="fu">++</span> show a]
+        return a
+    <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="kw">do</span>
+        result <span class="ot">&lt;-</span> gcdReverse b (a <span class="ot">`mod`</span> b)
+        tell [show a <span class="fu">++</span> <span class="st">&quot; mod &quot;</span> <span class="fu">++</span> show b <span class="fu">++</span> <span class="st">&quot; = &quot;</span> <span class="fu">++</span> show (a <span class="ot">`mod`</span> b)]
+        return result
+
+<span class="co">-- Difference lists can support more efficient appending</span>
+<span class="co">-- Differene list is a function that takes a list and prepands another list</span>
+<span class="co">-- [1,2,3] ===&gt; \xs -&gt; [1,2,3] ++ xs</span>
+<span class="co">-- []      ===&gt; \xs -&gt; [] ++ xs</span>
+<span class="co">-- f `append` g = \xs -&gt; f (g xs)</span>
+
+<span class="kw">newtype</span> <span class="dt">DiffList</span> a <span class="fu">=</span> <span class="dt">DiffList</span> {<span class="ot"> getDiffList ::</span> [a] <span class="ot">-&gt;</span> [a] }
+
+<span class="ot">toDiffList ::</span> [a] <span class="ot">-&gt;</span> <span class="dt">DiffList</span> a
+toDiffList xs <span class="fu">=</span> <span class="dt">DiffList</span> (xs<span class="fu">++</span>)
+
+<span class="ot">fromDiffList ::</span> <span class="dt">DiffList</span> a <span class="ot">-&gt;</span> [a]
+fromDiffList (<span class="dt">DiffList</span> f) <span class="fu">=</span> f []
+
+<span class="kw">instance</span> <span class="dt">Monoid</span> (<span class="dt">DiffList</span> a) <span class="kw">where</span>
+    mempty <span class="fu">=</span> <span class="dt">DiffList</span> ([]<span class="fu">++</span>)
+    (<span class="dt">DiffList</span> f) <span class="ot">`mappend`</span> (<span class="dt">DiffList</span> g) <span class="fu">=</span> <span class="dt">DiffList</span> (f <span class="fu">.</span> g)
+
+<span class="ot">gcdReverseImproved ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Writer</span> (<span class="dt">DiffList</span> <span class="dt">String</span>) <span class="dt">Int</span>
+gcdReverseImproved a b
+    <span class="fu">|</span> b <span class="fu">==</span> <span class="dv">0</span> <span class="fu">=</span> <span class="kw">do</span>
+        tell (toDiffList [<span class="st">&quot;Finished with &quot;</span> <span class="fu">++</span> show a])
+        return a
+    <span class="fu">|</span> otherwise <span class="fu">=</span> <span class="kw">do</span>
+        result <span class="ot">&lt;-</span> gcdReverseImproved b (a <span class="ot">`mod`</span> b)
+        tell (toDiffList [show a <span class="fu">++</span> <span class="st">&quot; mod &quot;</span> <span class="fu">++</span> show b <span class="fu">++</span> <span class="st">&quot; = &quot;</span> <span class="fu">++</span> show (a <span class="ot">`mod`</span> b)])
+        return result</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">HeathrowToLondon</span>
+( <span class="dt">Section</span>(<span class="fu">..</span>)
+, <span class="dt">Label</span>(<span class="fu">..</span>)
+, optimalPath
+) <span class="kw">where</span>
+
+<span class="kw">data</span> <span class="dt">Section</span> <span class="fu">=</span> <span class="dt">Section</span> {<span class="ot"> getA ::</span> <span class="dt">Int</span>,<span class="ot"> getB ::</span> <span class="dt">Int</span>,<span class="ot"> getC ::</span> <span class="dt">Int</span> } <span class="kw">deriving</span> (<span class="dt">Show</span>)  
+<span class="kw">type</span> <span class="dt">RoadSystem</span> <span class="fu">=</span> [<span class="dt">Section</span>]
+
+<span class="kw">data</span> <span class="dt">Label</span> <span class="fu">=</span> <span class="dt">A</span> <span class="fu">|</span> <span class="dt">B</span> <span class="fu">|</span> <span class="dt">C</span> <span class="kw">deriving</span> (<span class="dt">Show</span>, <span class="dt">Eq</span>)  
+<span class="kw">type</span> <span class="dt">Path</span> <span class="fu">=</span> [(<span class="dt">Label</span>, <span class="dt">Int</span>)]
+
+<span class="ot">optimalPath ::</span> <span class="dt">RoadSystem</span> <span class="ot">-&gt;</span> <span class="dt">Path</span>
+optimalPath roadSystem <span class="fu">=</span> 
+    <span class="kw">let</span> (bestAPath, bestBPath) <span class="fu">=</span> foldl roadStep ([],[]) roadSystem  
+    <span class="kw">in</span>  <span class="kw">if</span> sum (map snd bestAPath) <span class="fu">&lt;=</span> sum (map snd bestBPath)  
+            <span class="kw">then</span> reverse bestAPath  
+            <span class="kw">else</span> reverse bestBPath
+
+<span class="ot">roadStep ::</span> (<span class="dt">Path</span>, <span class="dt">Path</span>) <span class="ot">-&gt;</span> <span class="dt">Section</span> <span class="ot">-&gt;</span> (<span class="dt">Path</span>, <span class="dt">Path</span>)  
+roadStep (pathA, pathB) (<span class="dt">Section</span> a b c) <span class="fu">=</span>   
+    <span class="kw">let</span> priceA <span class="fu">=</span> sum <span class="fu">$</span> map snd pathA  
+        priceB <span class="fu">=</span> sum <span class="fu">$</span> map snd pathB  
+        forwardPriceToA <span class="fu">=</span> priceA <span class="fu">+</span> a  
+        crossPriceToA <span class="fu">=</span> priceB <span class="fu">+</span> b <span class="fu">+</span> c  
+        forwardPriceToB <span class="fu">=</span> priceB <span class="fu">+</span> b  
+        crossPriceToB <span class="fu">=</span> priceA <span class="fu">+</span> a <span class="fu">+</span> c  
+        newPathToA <span class="fu">=</span> <span class="kw">if</span> forwardPriceToA <span class="fu">&lt;=</span> crossPriceToA  
+                        <span class="kw">then</span> (<span class="dt">A</span>,a)<span class="fu">:</span>pathA  
+                        <span class="kw">else</span> (<span class="dt">C</span>,c)<span class="fu">:</span>(<span class="dt">B</span>,b)<span class="fu">:</span>pathB  
+        newPathToB <span class="fu">=</span> <span class="kw">if</span> forwardPriceToB <span class="fu">&lt;=</span> crossPriceToB  
+                        <span class="kw">then</span> (<span class="dt">B</span>,b)<span class="fu">:</span>pathB  
+                        <span class="kw">else</span> (<span class="dt">C</span>,c)<span class="fu">:</span>(<span class="dt">A</span>,a)<span class="fu">:</span>pathA  
+    <span class="kw">in</span>  (newPathToA, newPathToB)  </code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">calc ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">Double</span>
+calc input <span class="fu">=</span> head <span class="fu">.</span> foldl parse [] <span class="fu">$</span> words input
+  <span class="kw">where</span> parse acc x
+          <span class="fu">|</span> x <span class="fu">==</span> <span class="st">&quot;+&quot;</span> <span class="fu">=</span> <span class="kw">let</span> (a<span class="fu">:</span>b<span class="fu">:</span>xs) <span class="fu">=</span> acc <span class="kw">in</span> (b <span class="fu">+</span> a)<span class="fu">:</span>xs
+          <span class="fu">|</span> x <span class="fu">==</span> <span class="st">&quot;-&quot;</span> <span class="fu">=</span> <span class="kw">let</span> (a<span class="fu">:</span>b<span class="fu">:</span>xs) <span class="fu">=</span> acc <span class="kw">in</span> (b <span class="fu">-</span> a)<span class="fu">:</span>xs
+          <span class="fu">|</span> x <span class="fu">==</span> <span class="st">&quot;*&quot;</span> <span class="fu">=</span> <span class="kw">let</span> (a<span class="fu">:</span>b<span class="fu">:</span>xs) <span class="fu">=</span> acc <span class="kw">in</span> (b <span class="fu">*</span> a)<span class="fu">:</span>xs
+          <span class="fu">|</span> x <span class="fu">==</span> <span class="st">&quot;/&quot;</span> <span class="fu">=</span> <span class="kw">let</span> (a<span class="fu">:</span>b<span class="fu">:</span>xs) <span class="fu">=</span> acc <span class="kw">in</span> (b <span class="fu">/</span> a)<span class="fu">:</span>xs
+          <span class="fu">|</span> otherwise <span class="fu">=</span> (read<span class="ot"> x ::</span> <span class="dt">Double</span>)<span class="fu">:</span>acc</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">import </span><span class="dt">System.Environment</span>
+<span class="kw">import </span><span class="dt">System.Directory</span>
+<span class="kw">import </span><span class="dt">System.IO</span>
+<span class="kw">import </span><span class="dt">Data.List</span>
+
+<span class="kw">type</span> <span class="dt">Command</span> <span class="fu">=</span> [<span class="dt">String</span>] <span class="ot">-&gt;</span> <span class="dt">IO</span> ()
+
+main <span class="fu">=</span> <span class="kw">do</span>
+  (command<span class="fu">:</span>args) <span class="ot">&lt;-</span> getArgs
+  <span class="kw">let</span> action <span class="fu">=</span> <span class="kw">case</span> lookup command dispatch <span class="kw">of</span>
+                (<span class="dt">Nothing</span>)  <span class="ot">-&gt;</span> defaultErr
+                (<span class="dt">Just</span> (x)) <span class="ot">-&gt;</span> x
+  action args
+
+<span class="ot">dispatch ::</span> [(<span class="dt">String</span>, <span class="dt">Command</span>)]
+dispatch <span class="fu">=</span> [(<span class="st">&quot;add&quot;</span>, add)
+           ,(<span class="st">&quot;view&quot;</span>, view)
+           ,(<span class="st">&quot;remove&quot;</span>, remove)
+           ,(<span class="st">&quot;default&quot;</span>, defaultErr)
+           ]
+
+<span class="ot">add ::</span> <span class="dt">Command</span>
+add [filename, todoItem] <span class="fu">=</span> appendFile filename (todoItem <span class="fu">++</span> <span class="st">&quot;\n&quot;</span>)
+
+<span class="ot">view ::</span> <span class="dt">Command</span>
+view [filename] <span class="fu">=</span> <span class="kw">do</span>
+  contents <span class="ot">&lt;-</span> readFile filename
+  putStrLn <span class="fu">$</span> unlines <span class="fu">$</span> zipWith (\n line <span class="ot">-&gt;</span> show n <span class="fu">++</span> <span class="st">&quot;: &quot;</span> <span class="fu">++</span> line) [<span class="dv">1</span><span class="fu">..</span>] (lines contents)
+
+<span class="ot">remove ::</span> <span class="dt">Command</span>
+remove [filename, x] <span class="fu">=</span> <span class="kw">do</span>
+  contents <span class="ot">&lt;-</span> readFile filename
+  <span class="kw">let</span> todoItems <span class="fu">=</span> lines contents
+      index     <span class="fu">=</span> (read<span class="ot"> x ::</span> <span class="dt">Int</span>) <span class="fu">+</span> <span class="dv">1</span>
+
+  (tempName, tempHandle) <span class="ot">&lt;-</span> openTempFile <span class="st">&quot;.&quot;</span> <span class="st">&quot;temp&quot;</span>
+  hPutStr tempHandle <span class="fu">$</span> unlines <span class="fu">$</span> delete (todoItems <span class="fu">!!</span> index) todoItems
+  hClose tempHandle
+  removeFile filename
+  renameFile tempName filename
+
+<span class="ot">defaultErr ::</span> <span class="dt">Command</span>
+defaultErr _ <span class="fu">=</span> putStrLn <span class="st">&quot;Command not found&quot;</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">FileSystem</span> <span class="kw">where</span>
+
+<span class="kw">type</span> <span class="dt">Name</span> <span class="fu">=</span> <span class="dt">String</span>
+<span class="kw">type</span> <span class="dt">Data</span> <span class="fu">=</span> <span class="dt">String</span>
+<span class="kw">data</span> <span class="dt">Item</span> <span class="fu">=</span> <span class="dt">File</span> <span class="dt">Name</span> <span class="dt">Data</span> <span class="fu">|</span> <span class="dt">Folder</span> <span class="dt">Name</span> [<span class="dt">Item</span>] <span class="kw">deriving</span> (<span class="dt">Show</span>)
+<span class="kw">data</span> <span class="dt">Crumb</span> <span class="fu">=</span> <span class="dt">Crumb</span> <span class="dt">Name</span> [<span class="dt">Item</span>] [<span class="dt">Item</span>] <span class="kw">deriving</span> (<span class="dt">Show</span>)
+<span class="kw">type</span> <span class="dt">Zipper</span> <span class="fu">=</span> (<span class="dt">Item</span>, [<span class="dt">Crumb</span>])
+
+<span class="ot">fsUp ::</span> <span class="dt">Zipper</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span>
+fsUp (i, [])  <span class="fu">=</span> (i, [])
+fsUp (i, <span class="dt">Crumb</span> n xs ys<span class="fu">:</span>bs) <span class="fu">=</span> (<span class="dt">Folder</span> n (xs <span class="fu">++</span> i<span class="fu">:</span>ys), bs)
+
+<span class="ot">fsTo ::</span> <span class="dt">Name</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span>
+fsTo name (<span class="dt">Folder</span> fname fitems, bs) <span class="fu">=</span> (item, (<span class="dt">Crumb</span> fname ls rs)<span class="fu">:</span>bs)
+  <span class="kw">where</span>
+    ls   <span class="fu">=</span> takeWhile (\i <span class="ot">-&gt;</span> nameOf i <span class="fu">/=</span> name) fitems
+    rs   <span class="fu">=</span> drop (length ls <span class="fu">+</span> <span class="dv">1</span>) fitems
+    item <span class="fu">=</span> fitems <span class="fu">!!</span> (length ls)
+
+<span class="co">{-- Ah ! Need to learn more of prelude. Learnyouahaskell did me one better</span>
+<span class="co">fsTo :: Name -&gt; Zipper -&gt; Zipper</span>
+<span class="co">fsTo name (Folder fname fitems, bs) = </span>
+<span class="co">  let (ls, item:rs) = break (\i -&gt; nameOf i == name) fitems</span>
+<span class="co">  in (item, Crumb fname ls rs:bs)</span>
+
+<span class="co">-- NOTE break :: (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])</span>
+
+<span class="co">--}</span>
+<span class="ot">nameOf ::</span> <span class="dt">Item</span> <span class="ot">-&gt;</span> <span class="dt">Name</span>
+nameOf (<span class="dt">File</span> n _)   <span class="fu">=</span> n
+nameOf (<span class="dt">Folder</span> n _) <span class="fu">=</span> n
+
+<span class="ot">fsRename ::</span> <span class="dt">Name</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span>
+fsRename name (<span class="dt">File</span> n d, bs) <span class="fu">=</span> (<span class="dt">File</span> name d, bs)
+fsRename name (<span class="dt">Folder</span> n xs, bs) <span class="fu">=</span> (<span class="dt">Folder</span> name xs, bs)
+
+<span class="ot">fsTouch ::</span> <span class="dt">Item</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span> <span class="ot">-&gt;</span> <span class="dt">Zipper</span>
+fsTouch item (<span class="dt">Folder</span> n xs, bs) <span class="fu">=</span>
+  (<span class="dt">Folder</span> n (item<span class="fu">:</span>xs), bs)
+
+<span class="co">-- dummy data</span>
+<span class="ot">myDisk ::</span> <span class="dt">Item</span>
+myDisk <span class="fu">=</span> 
+  <span class="dt">Folder</span> <span class="st">&quot;root&quot;</span> 
+    [ <span class="dt">File</span> <span class="st">&quot;goat_yelling_like_man.wmv&quot;</span> <span class="st">&quot;baaaaaa&quot;</span>
+    , <span class="dt">File</span> <span class="st">&quot;pope_time.avi&quot;</span> <span class="st">&quot;god bless&quot;</span>
+    , <span class="dt">Folder</span> <span class="st">&quot;pics&quot;</span>
+      [ <span class="dt">File</span> <span class="st">&quot;ape_throwing_up.jpg&quot;</span> <span class="st">&quot;bleargh&quot;</span>
+      , <span class="dt">File</span> <span class="st">&quot;watermelon_smash.gif&quot;</span> <span class="st">&quot;smash!!&quot;</span>
+      , <span class="dt">File</span> <span class="st">&quot;skull_man(scary).bmp&quot;</span> <span class="st">&quot;Yikes!&quot;</span>
+      ]
+    , <span class="dt">File</span> <span class="st">&quot;dijon_poupon.doc&quot;</span> <span class="st">&quot;best mustard&quot;</span>
+    , <span class="dt">Folder</span> <span class="st">&quot;programs&quot;</span>
+      [ <span class="dt">File</span> <span class="st">&quot;fartwizard.exe&quot;</span> <span class="st">&quot;10gotofart&quot;</span>
+      , <span class="dt">File</span> <span class="st">&quot;owl_bandit.dmg&quot;</span> <span class="st">&quot;mov eax, h00t&quot;</span>
+      , <span class="dt">File</span> <span class="st">&quot;not_a_virus.exe&quot;</span> <span class="st">&quot;really not a virus&quot;</span>
+      , <span class="dt">Folder</span> <span class="st">&quot;source code&quot;</span>
+        [ <span class="dt">File</span> <span class="st">&quot;best_hs_prog.hs&quot;</span> <span class="st">&quot;main = print (fix error)&quot;</span>
+        , <span class="dt">File</span> <span class="st">&quot;random.hs&quot;</span> <span class="st">&quot;main = print 4&quot;</span>
+        ]
+      ]
+    ]</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">MaybeZips</span> <span class="kw">where</span>
+
+<span class="kw">import </span><span class="dt">Zippers</span> (<span class="dt">Tree</span>(..), <span class="dt">Crumb</span>(..), <span class="dt">Breadcrumbs</span>, <span class="dt">Zipper</span>, freeTree)
+
+<span class="co">-- Implementing error handling via maybe monad</span>
+
+<span class="ot">goLeft ::</span> <span class="dt">Zipper</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Zipper</span> a)
+goLeft (<span class="dt">Node</span> x l r, bs) <span class="fu">=</span> <span class="dt">Just</span> (l, <span class="dt">LeftCrumb</span> x r<span class="fu">:</span>bs)
+goLeft (<span class="dt">Empty</span>, _) <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">goRight ::</span> <span class="dt">Zipper</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Zipper</span> a)
+goRight (<span class="dt">Node</span> x l r, bs) <span class="fu">=</span> <span class="dt">Just</span> (r, <span class="dt">RightCrumb</span> x l<span class="fu">:</span>bs)
+goRight (<span class="dt">Empty</span>, _) <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="ot">goUp ::</span> <span class="dt">Zipper</span> a <span class="ot">-&gt;</span> <span class="dt">Maybe</span> (<span class="dt">Zipper</span> a)
+goUp (t, <span class="dt">LeftCrumb</span> x r<span class="fu">:</span>bs) <span class="fu">=</span> <span class="dt">Just</span> (<span class="dt">Node</span> x t r, bs)
+goUp (t, <span class="dt">RightCrumb</span> x l<span class="fu">:</span>bs) <span class="fu">=</span> <span class="dt">Just</span> (<span class="dt">Node</span> x l t, bs)
+goUp (_, []) <span class="fu">=</span> <span class="dt">Nothing</span>
+
+<span class="co">-- Notice that before we had f :: a -&gt; a, but now we have f :: a -&gt; Maybe a</span>
+<span class="co">-- Look familiar?</span>
+<span class="co">--       1</span>
+<span class="co">--    _     3</span>
+<span class="co">--         _ _</span>
+<span class="ot">coolTree ::</span> <span class="dt">Tree</span> <span class="dt">Int</span>
+coolTree <span class="fu">=</span> <span class="dt">Node</span> <span class="dv">1</span> <span class="dt">Empty</span> (<span class="dt">Node</span> <span class="dv">3</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+
+<span class="ot">coolerTree ::</span> <span class="dt">Maybe</span> (<span class="dt">Zipper</span> <span class="dt">Int</span>)
+coolerTree <span class="fu">=</span> return (coolTree, []) <span class="fu">&gt;&gt;=</span> goRight
+<span class="ot">failureTree ::</span> <span class="dt">Maybe</span> (<span class="dt">Zipper</span> <span class="dt">Int</span>)
+failureTree <span class="fu">=</span> return (coolTree, []) <span class="fu">&gt;&gt;=</span> goRight <span class="fu">&gt;&gt;=</span> goRight <span class="fu">&gt;&gt;=</span> goRight</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">module</span> <span class="dt">Zippers</span> <span class="kw">where</span>
+
+<span class="kw">data</span> <span class="dt">Tree</span> a <span class="fu">=</span> <span class="dt">Empty</span> <span class="fu">|</span> <span class="dt">Node</span> a (<span class="dt">Tree</span> a) (<span class="dt">Tree</span> a) <span class="kw">deriving</span> (<span class="dt">Show</span>)
+<span class="kw">data</span> <span class="dt">Direction</span> <span class="fu">=</span> <span class="dt">L</span> <span class="fu">|</span> <span class="dt">R</span> <span class="kw">deriving</span> (<span class="dt">Show</span>)
+<span class="kw">type</span> <span class="dt">Directions</span> <span class="fu">=</span> [<span class="dt">Direction</span>]
+
+<span class="ot">changeT ::</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Directions</span> <span class="ot">-&gt;</span> <span class="dt">Tree</span> <span class="dt">Char</span> <span class="ot">-&gt;</span> <span class="dt">Tree</span> <span class="dt">Char</span>
+changeT c (<span class="dt">L</span><span class="fu">:</span>ds) (<span class="dt">Node</span> x l r) <span class="fu">=</span> <span class="dt">Node</span> x (changeT c ds l) r
+changeT c (<span class="dt">R</span><span class="fu">:</span>ds) (<span class="dt">Node</span> x l r) <span class="fu">=</span> <span class="dt">Node</span> x l (changeT c ds r)
+changeT c [] (<span class="dt">Node</span> _ l r) <span class="fu">=</span> <span class="dt">Node</span> c l r
+
+<span class="ot">freeTree ::</span> <span class="dt">Tree</span> <span class="dt">Char</span>
+freeTree <span class="fu">=</span>
+    <span class="dt">Node</span> <span class="ch">&#39;P&#39;</span>
+        (<span class="dt">Node</span> <span class="ch">&#39;O&#39;</span>
+            (<span class="dt">Node</span> <span class="ch">&#39;L&#39;</span>
+                (<span class="dt">Node</span> <span class="ch">&#39;N&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+                (<span class="dt">Node</span> <span class="ch">&#39;T&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+            )
+            (<span class="dt">Node</span> <span class="ch">&#39;Y&#39;</span>
+                (<span class="dt">Node</span> <span class="ch">&#39;S&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+                (<span class="dt">Node</span> <span class="ch">&#39;A&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+            )
+        )
+        (<span class="dt">Node</span> <span class="ch">&#39;L&#39;</span>
+            (<span class="dt">Node</span> <span class="ch">&#39;W&#39;</span>
+                (<span class="dt">Node</span> <span class="ch">&#39;C&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+                (<span class="dt">Node</span> <span class="ch">&#39;R&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+            )
+            (<span class="dt">Node</span> <span class="ch">&#39;A&#39;</span>
+                (<span class="dt">Node</span> <span class="ch">&#39;A&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+                (<span class="dt">Node</span> <span class="ch">&#39;C&#39;</span> <span class="dt">Empty</span> <span class="dt">Empty</span>)
+            )
+        )
+
+<span class="ot">elemAt ::</span> <span class="dt">Directions</span> <span class="ot">-&gt;</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> a
+elemAt (<span class="dt">L</span><span class="fu">:</span>ds) (<span class="dt">Node</span> _ l _) <span class="fu">=</span> elemAt ds l
+elemAt (<span class="dt">R</span><span class="fu">:</span>ds) (<span class="dt">Node</span> _ _ r) <span class="fu">=</span> elemAt ds r
+elemAt [] (<span class="dt">Node</span> x _ _) <span class="fu">=</span> x
+
+<span class="co">-- This is cool, but inefficient since we need to walk the length of the tree every time</span>
+
+<span class="kw">type</span> <span class="dt">Breadcrumbs&#39;</span> <span class="fu">=</span> [<span class="dt">Direction</span>]
+
+<span class="ot">goLeft&#39; ::</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs&#39;</span>) <span class="ot">-&gt;</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs&#39;</span>)
+goLeft&#39; (<span class="dt">Node</span> _ l _, bs) <span class="fu">=</span> (l, <span class="dt">L</span><span class="fu">:</span>bs)
+
+<span class="ot">goRight&#39; ::</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs&#39;</span>) <span class="ot">-&gt;</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs&#39;</span>)
+goRight&#39; (<span class="dt">Node</span> _ _ r, bs) <span class="fu">=</span> (r, <span class="dt">R</span><span class="fu">:</span>bs)
+
+<span class="ot">(-:) ::</span> a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> b
+(<span class="fu">-:</span>) x f <span class="fu">=</span> f x
+
+<span class="ot">wNode ::</span> (<span class="dt">Tree</span> <span class="dt">Char</span>, <span class="dt">Breadcrumbs&#39;</span>)
+wNode <span class="fu">=</span> (freeTree, []) <span class="fu">-:</span> goRight&#39; <span class="fu">-:</span> goLeft&#39;
+
+<span class="co">-- This is cool, but once we goLeft or goRight, we lose the rest of the parent</span>
+<span class="co">-- tree and cant &quot;go back up&quot; from that return value. So let&#39;s keep all the data that we need</span>
+
+<span class="kw">data</span> <span class="dt">Crumb</span> a <span class="fu">=</span> <span class="dt">LeftCrumb</span> a (<span class="dt">Tree</span> a) <span class="fu">|</span> <span class="dt">RightCrumb</span> a (<span class="dt">Tree</span> a) <span class="kw">deriving</span> (<span class="dt">Show</span>)
+<span class="kw">type</span> <span class="dt">Breadcrumbs</span> a <span class="fu">=</span> [<span class="dt">Crumb</span> a]
+
+<span class="ot">goLeft ::</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a) <span class="ot">-&gt;</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a)
+goLeft (<span class="dt">Node</span> x l r, bs) <span class="fu">=</span> (l, (<span class="dt">LeftCrumb</span> x r)<span class="fu">:</span>bs)
+
+<span class="ot">goRight ::</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a) <span class="ot">-&gt;</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a)
+goRight (<span class="dt">Node</span> x l r, bs) <span class="fu">=</span> (r, (<span class="dt">RightCrumb</span> x l)<span class="fu">:</span>bs)
+
+<span class="ot">goUp ::</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a) <span class="ot">-&gt;</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a)
+goUp (t, <span class="dt">LeftCrumb</span> x r<span class="fu">:</span>bs) <span class="fu">=</span> (<span class="dt">Node</span> x t r, bs)
+goUp (t, <span class="dt">RightCrumb</span> x l<span class="fu">:</span>bs) <span class="fu">=</span> (<span class="dt">Node</span> x l t, bs)
+
+<span class="co">-- This type of structure is known as Zipper</span>
+<span class="kw">type</span> <span class="dt">Zipper</span> a <span class="fu">=</span> (<span class="dt">Tree</span> a, <span class="dt">Breadcrumbs</span> a)
+
+<span class="ot">modify ::</span> (a <span class="ot">-&gt;</span> a) <span class="ot">-&gt;</span> <span class="dt">Zipper</span> a <span class="ot">-&gt;</span> <span class="dt">Zipper</span> a
+modify f (<span class="dt">Node</span> x l r, bs) <span class="fu">=</span> (<span class="dt">Node</span> (f x) l r, bs)
+modify f (<span class="dt">Empty</span>, bs) <span class="fu">=</span> (<span class="dt">Empty</span>, bs)
+
+<span class="ot">attach ::</span> <span class="dt">Tree</span> a <span class="ot">-&gt;</span> <span class="dt">Zipper</span> a <span class="ot">-&gt;</span> <span class="dt">Zipper</span> a
+attach t (_, bs) <span class="fu">=</span> (t, bs)
+
+<span class="ot">topMost ::</span> <span class="dt">Zipper</span> a <span class="ot">-&gt;</span> <span class="dt">Zipper</span> a
+topMost (t, []) <span class="fu">=</span> (t, [])
+topMost z <span class="fu">=</span> topMost <span class="fu">.</span> goUp <span class="fu">$</span> z
+
+<span class="co">-- Let&#39;s make [] into a Zipper</span>
+
+<span class="kw">type</span> <span class="dt">ListZipper</span> a <span class="fu">=</span> ([a], [a])
+
+<span class="ot">goForward ::</span> <span class="dt">ListZipper</span> a <span class="ot">-&gt;</span> <span class="dt">ListZipper</span> a
+goForward (x<span class="fu">:</span>xs, bs) <span class="fu">=</span> (xs, x<span class="fu">:</span>bs)
+
+<span class="ot">goBack ::</span> <span class="dt">ListZipper</span> a <span class="ot">-&gt;</span> <span class="dt">ListZipper</span> a
+goBack (xs, b<span class="fu">:</span>bs) <span class="fu">=</span> (b<span class="fu">:</span>xs, bs)
+
+<span class="co">-- thats a bit easier. we&#39;re just balancing a stack [abcd] [] --&gt; [bcd] [a] --&gt; ...</span></code></pre></div>
+</body>
+</html>
